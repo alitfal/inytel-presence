@@ -14,9 +14,9 @@ const JWT_SECRET = "inytel_secret_key_2024";
 const db = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
   port: process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3307,
-  user: "root",
-  password: "root_password",
-  database: "inytel_db",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASS || "root_password",
+  database: process.env.DB_NAME || "inytel_db",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
