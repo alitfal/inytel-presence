@@ -1,0 +1,7 @@
+{
+  "name": "inytel-presence",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "start": "node backend/server.js"
+  }
+}

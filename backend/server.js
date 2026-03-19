@@ -8,6 +8,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const path = require("path");
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
 const JWT_SECRET = "inytel_secret_key_2024";
 
 // ─── DB ───────────────────────────────────────
@@ -789,5 +792,7 @@ app.get(
     }
   },
 );
-
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
+});
 app.listen(3001, () => console.log("🚀 API lista en puerto 3001"));
