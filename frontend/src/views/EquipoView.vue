@@ -18,6 +18,7 @@ const mostrarCambiarPassword = ref(false);
 const credencialesNuevas = ref(null);
 
 const menuAbierto = ref(null);
+const menuBtn = ref(null);
 const mostrandoResetId = ref(null);
 const passwordReset = ref("");
 const passwordResetConfirm = ref("");
@@ -309,8 +310,7 @@ onUnmounted(() => clearInterval(refreshInterval));
               </button>
               <div
                 v-if="menuAbierto === person.id"
-                class="fixed bg-white border border-slate-100 rounded-2xl shadow-xl z-50 w-52 p-2"
-                style="transform: translateX(-200px)"
+                class="absolute right-0 top-8 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 w-52 p-2"
               >
                 <div v-if="mostrandoResetId !== person.id">
                   <button

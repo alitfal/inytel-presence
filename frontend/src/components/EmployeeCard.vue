@@ -13,6 +13,8 @@ const props = defineProps({ employee: { type: Object, required: true } });
 const emit = defineEmits(["ver-ficha", "actualizar"]);
 
 const menuAbierto = ref(false);
+const menuBtn = ref(null);
+const menuALaIzquierda = ref(false);
 const mostrandoReset = ref(false);
 const passwordNueva = ref("");
 const passwordConfirm = ref("");
@@ -22,6 +24,10 @@ const loadingReset = ref(false);
 const loadingActivo = ref(false);
 
 function toggleMenu() {
+  if (!menuAbierto.value && menuBtn.value) {
+    const rect = menuBtn.value.getBoundingClientRect();
+    menuALaIzquierda.value = rect.left < window.innerWidth / 2;
+  }
   menuAbierto.value = !menuAbierto.value;
   errorReset.value = "";
   exitoReset.value = false;
@@ -90,6 +96,7 @@ async function toggleActivo() {
 
       <div class="relative">
         <button
+          ref="menuBtn"
           @click="toggleMenu"
           class="text-slate-300 hover:text-slate-600 p-1 cursor-pointer"
         >
@@ -97,7 +104,8 @@ async function toggleActivo() {
         </button>
         <div
           v-if="menuAbierto"
-          class="absolute right-0 top-8 bg-white border border-slate-100 rounded-2xl shadow-xl z-10 w-52 p-2"
+          :class="menuALaIzquierda ? 'left-0' : 'right-0'"
+          class="absolute top-8 bg-white border border-slate-100 rounded-2xl shadow-xl z-10 w-52 p-2"
         >
           <div v-if="!mostrandoReset">
             <button

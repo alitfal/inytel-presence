@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const mysql = require("mysql2/promise");
 const cors = require("cors");
@@ -28,11 +30,11 @@ const db = mysql.createPool({
 });
 
 db.getConnection()
-  .then(conn => {
+  .then((conn) => {
     console.log("✅ Conectado a MySQL Inytel Presence (V3)");
     conn.release();
   })
-  .catch(err => console.error("❌ Error DB inicial:", err.message));
+  .catch((err) => console.error("❌ Error DB inicial:", err.message));
 
 // ─── MIDDLEWARES ──────────────────────────────
 function authMiddleware(req, res, next) {

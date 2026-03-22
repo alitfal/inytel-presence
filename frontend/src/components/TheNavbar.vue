@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
-import { Search, Menu, X } from "lucide-vue-next";
+import { Search } from "lucide-vue-next";
 
 const currentTime = ref("--:--:--");
 const currentDate = ref("Cargando...");
@@ -30,7 +30,6 @@ onMounted(() => {
 onUnmounted(() => clearInterval(timer));
 
 const model = defineModel();
-const emit = defineEmits(["toggle-sidebar"]);
 </script>
 
 <template>
@@ -38,14 +37,6 @@ const emit = defineEmits(["toggle-sidebar"]);
     class="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50"
   >
     <div class="px-4 md:px-6 h-20 flex items-center justify-between gap-3">
-      <!-- Hamburguesa (solo móvil/tablet) -->
-      <button
-        @click="emit('toggle-sidebar')"
-        class="lg:hidden p-2 rounded-xl text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-all cursor-pointer shrink-0"
-      >
-        <Menu class="w-5 h-5" />
-      </button>
-
       <!-- Logo -->
       <div class="flex items-center gap-3 shrink-0">
         <div
