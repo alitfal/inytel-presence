@@ -5,6 +5,8 @@ import LoginView    from "../views/LoginView.vue";
 import EquipoView   from "../views/EquipoView.vue";
 import DashboardView from "../views/DashboardView.vue";
 import PerfilView   from "../views/PerfilView.vue";
+import ResetPasswordView from "../views/ResetPasswordView.vue";
+
 
 const routes = [
   { path: "/",          redirect: "/equipo" },
@@ -12,6 +14,7 @@ const routes = [
   { path: "/equipo",    component: EquipoView,    meta: { requiereAuth: true, soloAdmin: true } },
   { path: "/dashboard", component: DashboardView, meta: { requiereAuth: true, soloAdmin: true } },
   { path: "/perfil",    component: PerfilView,    meta: { requiereAuth: true } },
+  { path: "/reset-password", component: ResetPasswordView, meta: { publica: true } },
 ];
 
 const router = createRouter({

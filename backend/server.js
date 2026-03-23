@@ -169,6 +169,17 @@ app.put(
         "UPDATE usuarios SET password = ? WHERE empleado_id = ?",
         [hash, req.params.usuario_id],
       );
+
+      const [[usuario]] = await db.execute(
+        "SELECT nombre, email FROM usuarios WHERE empleado_id = ?",
+        [req.params.usuario_id],
+      );
+      await notificarResetPassword({
+        nombre: usuario.nombre,
+        email: usuario.email,
+        password_nueva,
+      });
+
       res.json({ mensaje: "Contraseña reseteada correctamente" });
     } catch (err) {
       res.status(500).json({ error: err.message });
@@ -242,6 +253,7 @@ app.post("/api/empleados", authMiddleware, soloAdmin, async (req, res) => {
       "INSERT INTO usuarios (nombre, email, password, rol, empleado_id) VALUES (?, ?, ?, 'empleado', ?)",
       [nombre, email, hash, result.insertId],
     );
+    await notificarNuevoEmpleado({ nombre, email, password_temporal: dni });
     res.json({
       id: result.insertId,
       mensaje: "Empleado creado correctamente",
@@ -794,6 +806,189 @@ app.get(
     }
   },
 );
+
+// ─── RESEND ───────────────────────────────────
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
+const crypto = require("crypto");
+
+// Helper para enviar emails
+async function enviarEmail({ to, subject, html }) {
+  try {
+    await resend.emails.send({
+      from: "INYTEL Presence <no-reply@inytel.com>",
+      to,
+      subject,
+      html,
+    });
+  } catch (err) {
+    console.error("❌ Error enviando email:", err.message);
+  }
+}
+
+// ─── SOLICITAR RECUPERACIÓN DE CONTRASEÑA ─────
+app.post("/api/auth/recuperar", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const [rows] = await db.execute("SELECT * FROM usuarios WHERE email = ?", [
+      email,
+    ]);
+
+    // Siempre responder OK para no revelar si el email existe
+    if (rows.length === 0)
+      return res.json({ mensaje: "Si el email existe recibirás un correo" });
+
+    const usuario = rows[0];
+    const token = crypto.randomBytes(32).toString("hex");
+    const expira = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+    // Invalidar tokens anteriores del usuario
+    await db.execute(
+      "UPDATE password_reset_tokens SET usado = 1 WHERE usuario_id = ?",
+      [usuario.id],
+    );
+
+    // Guardar nuevo token
+    await db.execute(
+      "INSERT INTO password_reset_tokens (usuario_id, token, expira_en) VALUES (?, ?, ?)",
+      [usuario.id, token, expira.toISOString().slice(0, 19).replace("T", " ")],
+    );
+
+    const enlace = `${process.env.APP_URL || "https://inytel-presence.up.railway.app"}/reset-password?token=${token}`;
+
+    await enviarEmail({
+      to: email,
+      subject: "Recuperación de contraseña — INYTEL Presence",
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+          <div style="background: #4f46e5; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <h1 style="color: white; font-size: 24px; margin: 0; font-style: italic;">INYTEL | Presence</h1>
+          </div>
+          <h2 style="color: #1e293b;">Recuperación de contraseña</h2>
+          <p style="color: #64748b;">Has solicitado restablecer tu contraseña. Haz clic en el botón para crear una nueva:</p>
+          <a href="${enlace}" style="display: inline-block; background: #4f46e5; color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: bold; margin: 16px 0;">
+            Restablecer contraseña
+          </a>
+          <p style="color: #94a3b8; font-size: 13px;">Este enlace expira en 1 hora. Si no solicitaste este cambio, ignora este email.</p>
+          <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
+          <p style="color: #cbd5e1; font-size: 12px; text-align: center;">INYTEL Presence — Sistema de control de presencia</p>
+        </div>
+      `,
+    });
+
+    res.json({ mensaje: "Si el email existe recibirás un correo" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── VERIFICAR TOKEN Y CAMBIAR CONTRASEÑA ─────
+app.post("/api/auth/reset-password", async (req, res) => {
+  try {
+    const { token, password_nueva } = req.body;
+
+    if (!password_nueva || password_nueva.length < 6)
+      return res
+        .status(400)
+        .json({ error: "La contraseña debe tener al menos 6 caracteres" });
+
+    const [rows] = await db.execute(
+      `SELECT * FROM password_reset_tokens
+       WHERE token = ? AND usado = 0 AND expira_en > NOW()`,
+      [token],
+    );
+
+    if (rows.length === 0)
+      return res
+        .status(400)
+        .json({ error: "El enlace no es válido o ha expirado" });
+
+    const resetToken = rows[0];
+    const hash = await bcrypt.hash(password_nueva, 10);
+
+    await db.execute("UPDATE usuarios SET password = ? WHERE id = ?", [
+      hash,
+      resetToken.usuario_id,
+    ]);
+    await db.execute(
+      "UPDATE password_reset_tokens SET usado = 1 WHERE id = ?",
+      [resetToken.id],
+    );
+
+    // Obtener email del usuario para notificación
+    const [[usuario]] = await db.execute(
+      "SELECT email, nombre FROM usuarios WHERE id = ?",
+      [resetToken.usuario_id],
+    );
+
+    await enviarEmail({
+      to: usuario.email,
+      subject: "Contraseña actualizada — INYTEL Presence",
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+          <div style="background: #4f46e5; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <h1 style="color: white; font-size: 24px; margin: 0; font-style: italic;">INYTEL | Presence</h1>
+          </div>
+          <h2 style="color: #1e293b;">Contraseña actualizada</h2>
+          <p style="color: #64748b;">Hola ${usuario.nombre}, tu contraseña ha sido actualizada correctamente.</p>
+          <p style="color: #94a3b8; font-size: 13px;">Si no fuiste tú, contacta con tu administrador inmediatamente.</p>
+        </div>
+      `,
+    });
+
+    res.json({ mensaje: "Contraseña actualizada correctamente" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ─── NOTIFICACIÓN NUEVO EMPLEADO ──────────────
+async function notificarNuevoEmpleado({ nombre, email, password_temporal }) {
+  await enviarEmail({
+    to: email,
+    subject: "Bienvenido a INYTEL Presence — Tus credenciales de acceso",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+        <div style="background: #4f46e5; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px;">
+          <h1 style="color: white; font-size: 24px; margin: 0; font-style: italic;">INYTEL | Presence</h1>
+        </div>
+        <h2 style="color: #1e293b;">Bienvenido, ${nombre}</h2>
+        <p style="color: #64748b;">Tu cuenta en INYTEL Presence ha sido creada. Aquí tienes tus credenciales de acceso:</p>
+        <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 16px 0;">
+          <p style="margin: 0 0 8px 0;"><span style="color: #94a3b8;">Email:</span> <strong style="color: #1e293b;">${email}</strong></p>
+          <p style="margin: 0;"><span style="color: #94a3b8;">Contraseña temporal:</span> <strong style="color: #1e293b;">${password_temporal}</strong></p>
+        </div>
+        <p style="color: #94a3b8; font-size: 13px;">Por seguridad, te recomendamos cambiar tu contraseña en el primer acceso.</p>
+        <a href="${process.env.APP_URL || "https://inytel-presence.up.railway.app"}" style="display: inline-block; background: #4f46e5; color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: bold; margin: 16px 0;">
+          Acceder a INYTEL Presence
+        </a>
+      </div>
+    `,
+  });
+}
+
+// ─── NOTIFICACIÓN RESET CONTRASEÑA (admin) ────
+async function notificarResetPassword({ nombre, email, password_nueva }) {
+  await enviarEmail({
+    to: email,
+    subject: "Tu contraseña ha sido restablecida — INYTEL Presence",
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+        <div style="background: #4f46e5; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px;">
+          <h1 style="color: white; font-size: 24px; margin: 0; font-style: italic;">INYTEL | Presence</h1>
+        </div>
+        <h2 style="color: #1e293b;">Contraseña restablecida</h2>
+        <p style="color: #64748b;">Hola ${nombre}, un administrador ha restablecido tu contraseña de acceso.</p>
+        <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin: 16px 0;">
+          <p style="margin: 0 0 8px 0;"><span style="color: #94a3b8;">Email:</span> <strong style="color: #1e293b;">${email}</strong></p>
+          <p style="margin: 0;"><span style="color: #94a3b8;">Nueva contraseña:</span> <strong style="color: #1e293b;">${password_nueva}</strong></p>
+        </div>
+        <p style="color: #94a3b8; font-size: 13px;">Por seguridad, te recomendamos cambiar tu contraseña tras el acceso.</p>
+      </div>
+    `,
+  });
+}
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
 });

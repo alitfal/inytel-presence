@@ -2,6 +2,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { useAuth } from "../composables/useAuth";
+import axios from "axios";
 
 const router = useRouter();
 const { login } = useAuth();
@@ -10,6 +11,13 @@ const email = ref("");
 const password = ref("");
 const error = ref("");
 const loading = ref(false);
+
+// Recuperación de contraseña
+const mostrarRecuperar = ref(false);
+const emailRecuperar = ref("");
+const loadingRecuperar = ref(false);
+const mensajeRecuperar = ref("");
+const errorRecuperar = ref("");
 
 async function handleLogin() {
   try {
@@ -22,6 +30,25 @@ async function handleLogin() {
     error.value = "Email o contraseña incorrectos";
   } finally {
     loading.value = false;
+  }
+}
+
+async function handleRecuperar() {
+  errorRecuperar.value = "";
+  mensajeRecuperar.value = "";
+  if (!emailRecuperar.value) {
+    errorRecuperar.value = "Introduce tu email";
+    return;
+  }
+  try {
+    loadingRecuperar.value = true;
+    await axios.post("/api/auth/recuperar", { email: emailRecuperar.value });
+    mensajeRecuperar.value = "Si el email existe recibirás un correo con instrucciones.";
+    emailRecuperar.value = "";
+  } catch (err) {
+    errorRecuperar.value = "Error al enviar el correo. Inténtalo de nuevo.";
+  } finally {
+    loadingRecuperar.value = false;
   }
 }
 </script>
@@ -40,11 +67,11 @@ async function handleLogin() {
             INYTEL <span class="text-indigo-600 font-light ml-1">| Presence</span>
           </h1>
         </div>
-        <p class="text-slate-400 text-sm">Accede a tu cuenta</p>
+        <p class="text-slate-400 text-sm">{{ mostrarRecuperar ? 'Recuperar contraseña' : 'Accede a tu cuenta' }}</p>
       </div>
 
-      <!-- Formulario -->
-      <div class="space-y-4">
+      <!-- Formulario login -->
+      <div v-if="!mostrarRecuperar" class="space-y-4">
         <div>
           <label class="text-slate-400 text-sm font-medium block mb-1">Email</label>
           <input
@@ -71,9 +98,50 @@ async function handleLogin() {
         <button
           @click="handleLogin"
           :disabled="loading"
-          class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-2xl transition-colors mt-2"
+          class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-2xl transition-colors mt-2 cursor-pointer"
         >
           {{ loading ? 'Accediendo...' : 'Entrar' }}
+        </button>
+
+        <button
+          @click="mostrarRecuperar = true"
+          class="w-full text-center text-slate-400 hover:text-indigo-600 text-sm font-medium transition-colors cursor-pointer"
+        >
+          ¿Olvidaste tu contraseña?
+        </button>
+      </div>
+
+      <!-- Formulario recuperar contraseña -->
+      <div v-else class="space-y-4">
+        <p class="text-slate-400 text-sm">Introduce tu email y te enviaremos un enlace para restablecer tu contraseña.</p>
+
+        <div>
+          <label class="text-slate-400 text-sm font-medium block mb-1">Email</label>
+          <input
+            v-model="emailRecuperar"
+            type="email"
+            placeholder="tu@email.com"
+            class="w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none focus:border-indigo-400 transition-colors text-sm"
+            @keyup.enter="handleRecuperar"
+          />
+        </div>
+
+        <p v-if="errorRecuperar" class="text-rose-500 text-xs font-medium">{{ errorRecuperar }}</p>
+        <p v-if="mensajeRecuperar" class="text-emerald-500 text-xs font-medium">{{ mensajeRecuperar }}</p>
+
+        <button
+          @click="handleRecuperar"
+          :disabled="loadingRecuperar"
+          class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-2xl transition-colors cursor-pointer"
+        >
+          {{ loadingRecuperar ? 'Enviando...' : 'Enviar enlace' }}
+        </button>
+
+        <button
+          @click="mostrarRecuperar = false; mensajeRecuperar = ''; errorRecuperar = ''"
+          class="w-full text-center text-slate-400 hover:text-indigo-600 text-sm font-medium transition-colors cursor-pointer"
+        >
+          ← Volver al login
         </button>
       </div>
 
