@@ -30,7 +30,7 @@ const db = mysql.createPool({
 });
 
 db.getConnection()
-  .then((conn) => {
+  .then((conn) => { 
     console.log("✅ Conectado a MySQL Inytel Presence (V3)");
     conn.release();
   })
