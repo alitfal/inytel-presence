@@ -147,6 +147,20 @@ app.put("/api/auth/password", authMiddleware, async (req, res) => {
       hash,
       req.usuario.id,
     ]);
+    await enviarEmail({
+      to: usuario.email,
+      subject: "Contraseña actualizada — INYTEL Presence",
+      html: `
+        <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+          <div style="background: #4f46e5; border-radius: 16px; padding: 24px; text-align: center; margin-bottom: 24px;">
+            <h1 style="color: white; font-size: 24px; margin: 0; font-style: italic;">INYTEL | Presence</h1>
+          </div>
+          <h2 style="color: #1e293b;">Contraseña actualizada</h2>
+          <p style="color: #64748b;">Hola ${usuario.nombre}, tu contraseña ha sido actualizada correctamente desde tu perfil.</p>
+          <p style="color: #94a3b8; font-size: 13px;">Si no fuiste tú, contacta con tu administrador inmediatamente.</p>
+        </div>
+      `,
+    });
     res.json({ mensaje: "Contraseña actualizada correctamente" });
   } catch (err) {
     res.status(500).json({ error: err.message });

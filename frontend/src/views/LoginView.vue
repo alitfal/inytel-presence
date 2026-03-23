@@ -120,7 +120,7 @@ async function handleRecuperar() {
           <input
             v-model="emailRecuperar"
             type="email"
-            placeholder="tu@email.com"
+            placeholder="alan.touring@example.com"
             class="w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none focus:border-indigo-400 transition-colors text-sm"
             @keyup.enter="handleRecuperar"
           />
