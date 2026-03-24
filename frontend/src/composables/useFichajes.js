@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import axios from "axios";
 
 export function useFichajes() {
@@ -6,14 +6,71 @@ export function useFichajes() {
   const loadingHistorial = ref(false);
   const periodoActivo = ref("semana");
   const errorFichaje = ref("");
+  const offset = ref(0); // 0 = actual, -1 = anterior, etc.
 
-  async function fetchHistorial(empleado_id, periodo = "semana") {
+  // ── Etiqueta de navegación ────────────────────
+  const etiquetaPeriodo = computed(() => {
+    const hoy = new Date();
+    if (periodoActivo.value === "hoy") {
+      const d = new Date(hoy);
+      d.setDate(d.getDate() + offset.value);
+      return d.toLocaleDateString("es-ES", {
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+      });
+    }
+    if (periodoActivo.value === "semana") {
+      const d = new Date(hoy);
+      d.setDate(d.getDate() + offset.value * 7);
+      const dia = d.getDay() || 7;
+      const lunes = new Date(d);
+      lunes.setDate(d.getDate() - dia + 1);
+      const domingo = new Date(lunes);
+      domingo.setDate(lunes.getDate() + 6);
+      const fmt = (x) =>
+        x.toLocaleDateString("es-ES", { day: "2-digit", month: "short" });
+      return `${fmt(lunes)} – ${fmt(domingo)}`;
+    }
+    if (periodoActivo.value === "mes") {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset.value, 1);
+      return d.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
+    }
+    return "";
+  });
+
+  // ── Parámetros de fecha para la API ──────────
+  function getParams() {
+    const hoy = new Date();
+    if (periodoActivo.value === "hoy") {
+      const d = new Date(hoy);
+      d.setDate(d.getDate() + offset.value);
+      return { periodo: "hoy", fecha: d.toISOString().slice(0, 10) };
+    }
+    if (periodoActivo.value === "semana") {
+      const d = new Date(hoy);
+      d.setDate(d.getDate() + offset.value * 7);
+      const dia = d.getDay() || 7;
+      const lunes = new Date(d);
+      lunes.setDate(d.getDate() - dia + 1);
+      return { periodo: "semana", fecha: lunes.toISOString().slice(0, 10) };
+    }
+    if (periodoActivo.value === "mes") {
+      const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset.value, 1);
+      return { periodo: "mes", fecha: d.toISOString().slice(0, 10) };
+    }
+    return { periodo: periodoActivo.value };
+  }
+
+  async function fetchHistorial(empleado_id) {
     try {
       loadingHistorial.value = true;
       const token = localStorage.getItem("token");
+      const params = getParams();
+      const query = new URLSearchParams(params).toString();
       const { data } = await axios.get(
-        `/api/fichajes/${empleado_id}?periodo=${periodo}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `/api/fichajes/${empleado_id}?${query}`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       historial.value = data;
     } catch (err) {
@@ -25,7 +82,13 @@ export function useFichajes() {
 
   async function cambiarPeriodo(empleado_id, periodo) {
     periodoActivo.value = periodo;
-    await fetchHistorial(empleado_id, periodo);
+    offset.value = 0;
+    await fetchHistorial(empleado_id);
+  }
+
+  async function navegarPeriodo(empleado_id, dir) {
+    offset.value += dir;
+    await fetchHistorial(empleado_id);
   }
 
   async function fichar(empleado_id, tipo) {
@@ -36,9 +99,9 @@ export function useFichajes() {
       await axios.post(
         `/api/fichajes/${endpoint}`,
         { empleado_id },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
-      await fetchHistorial(empleado_id, periodoActivo.value);
+      await fetchHistorial(empleado_id);
       return { ok: true };
     } catch (err) {
       errorFichaje.value = err.response?.data?.error || "Error al fichar";
@@ -50,17 +113,30 @@ export function useFichajes() {
     const fecha = formatFecha(jornada.fecha_entrada);
     const entrada = jornada.hora_entrada?.slice(0, 5) || "--:--";
     const salida = jornada.hora_salida?.slice(0, 5) || null;
-    const duracion = calcularDuracion(jornada.hora_entrada, jornada.hora_salida);
-    return { fecha, entrada, salida, duracion, incidencia: !!jornada.motivo_incidencia };
+    const duracion = calcularDuracion(
+      jornada.hora_entrada,
+      jornada.hora_salida,
+    );
+    return {
+      fecha,
+      entrada,
+      salida,
+      duracion,
+      incidencia: !!jornada.motivo_incidencia,
+    };
   }
 
   function formatFecha(fecha) {
     if (!fecha) return "";
-    const str = fecha instanceof Date
-      ? fecha.toISOString().slice(0, 10)
-      : String(fecha).slice(0, 10);
+    const str =
+      fecha instanceof Date
+        ? fecha.toISOString().slice(0, 10)
+        : String(fecha).slice(0, 10);
     return new Date(str + "T12:00:00").toLocaleDateString("es-ES", {
-      weekday: "short", day: "2-digit", month: "2-digit", year: "numeric",
+      weekday: "short",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
     });
   }
 
@@ -68,7 +144,7 @@ export function useFichajes() {
     if (!horaEntrada || !horaSalida) return null;
     const [he, me] = horaEntrada.split(":").map(Number);
     const [hs, ms] = horaSalida.split(":").map(Number);
-    const mins = (hs * 60 + ms) - (he * 60 + me);
+    const mins = hs * 60 + ms - (he * 60 + me);
     if (mins <= 0) return null;
     const h = Math.floor(mins / 60);
     const m = mins % 60;
@@ -78,14 +154,28 @@ export function useFichajes() {
   function formatFechaHora(fechaHora) {
     if (!fechaHora) return "";
     return new Date(fechaHora).toLocaleString("es-ES", {
-      day: "2-digit", month: "2-digit", year: "numeric",
-      hour: "2-digit", minute: "2-digit",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   }
 
   return {
-    historial, loadingHistorial, periodoActivo, errorFichaje,
-    fetchHistorial, cambiarPeriodo, fichar,
-    formatJornada, formatFecha, calcularDuracion, formatFechaHora,
+    historial,
+    loadingHistorial,
+    periodoActivo,
+    errorFichaje,
+    offset,
+    etiquetaPeriodo,
+    fetchHistorial,
+    cambiarPeriodo,
+    navegarPeriodo,
+    fichar,
+    formatJornada,
+    formatFecha,
+    calcularDuracion,
+    formatFechaHora,
   };
 }

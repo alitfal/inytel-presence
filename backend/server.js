@@ -450,16 +450,27 @@ app.post("/api/fichajes/salida", authMiddleware, async (req, res) => {
 app.get("/api/fichajes/:empleado_id", authMiddleware, async (req, res) => {
   try {
     const { empleado_id } = req.params;
-    const { periodo } = req.query;
-
+    const { periodo, fecha } = req.query;
     let condicion;
+
     if (periodo === "hoy") {
-      condicion = "fecha_entrada = CURDATE()";
+      const dia = fecha || new Date().toISOString().slice(0, 10);
+      condicion = `fecha_entrada = '${dia}'`;
     } else if (periodo === "mes") {
-      condicion = "fecha_entrada >= DATE_FORMAT(CURDATE(), '%Y-%m-01')";
+      const base = fecha ? new Date(fecha) : new Date();
+      const inicio = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-01`;
+      const fin = new Date(base.getFullYear(), base.getMonth() + 1, 0)
+        .toISOString()
+        .slice(0, 10);
+      condicion = `fecha_entrada BETWEEN '${inicio}' AND '${fin}'`;
     } else {
-      condicion =
-        "fecha_entrada >= DATE_SUB(CURDATE(), INTERVAL WEEKDAY(CURDATE()) DAY)";
+      const base = fecha ? new Date(fecha) : new Date();
+      const dia = base.getDay() || 7;
+      const lunes = new Date(base);
+      lunes.setDate(base.getDate() - dia + 1);
+      const domingo = new Date(lunes);
+      domingo.setDate(lunes.getDate() + 6);
+      condicion = `fecha_entrada BETWEEN '${lunes.toISOString().slice(0, 10)}' AND '${domingo.toISOString().slice(0, 10)}'`;
     }
 
     const [rows] = await db.execute(
