@@ -1,0 +1,238 @@
+// Rutas de gestión de fichajes
+// Registro de entradas/salidas, historial e incidencias
+const express = require("express");
+const router = express.Router();
+const db = require("../config/db");
+const { authMiddleware, soloAdmin } = require("../middlewares/auth");
+
+/**
+ * POST /api/fichajes/entrada
+ * Registra la entrada de un empleado.
+ * Valida que el empleado esté activo, que sea un día laborable
+ * y que no haya una entrada abierta ya registrada hoy.
+ */
+router.post("/entrada", authMiddleware, async (req, res) => {
+  try {
+    const { empleado_id } = req.body;
+    const [[empleado]] = await db.execute(
+      "SELECT activo, dias_laborables FROM empleados WHERE id = ?",
+      [empleado_id],
+    );
+
+    if (!empleado.activo)
+      return res.status(403).json({
+        error: "Tu cuenta está desactivada. Contacta con tu administrador.",
+      });
+
+    // Validar día laborable según configuración del empleado
+    const hoy = new Date();
+    const diaSemana = hoy.getDay() === 0 ? 7 : hoy.getDay();
+    const diasPermitidos = (empleado.dias_laborables || "1,2,3,4,5")
+      .split(",")
+      .map(Number);
+    if (!diasPermitidos.includes(diaSemana)) {
+      const nombres = [
+        "",
+        "lunes",
+        "martes",
+        "miércoles",
+        "jueves",
+        "viernes",
+        "sábado",
+        "domingo",
+      ];
+      return res.status(403).json({
+        error: `Hoy es ${nombres[diaSemana]} y no es un día laborable para ti.`,
+      });
+    }
+
+    // Evitar doble entrada en el mismo día
+    const [abierta] = await db.execute(
+      "SELECT id FROM fichajes WHERE empleado_id = ? AND fecha_entrada = CURDATE() AND hora_salida IS NULL",
+      [empleado_id],
+    );
+    if (abierta.length > 0)
+      return res
+        .status(400)
+        .json({ error: "Ya tienes una entrada registrada hoy sin salida." });
+
+    const fecha = hoy.toISOString().slice(0, 10);
+    const hora = hoy.toTimeString().slice(0, 8);
+    await db.execute(
+      "INSERT INTO fichajes (empleado_id, fecha_entrada, hora_entrada) VALUES (?, ?, ?)",
+      [empleado_id, fecha, hora],
+    );
+    res.json({ mensaje: "Entrada registrada correctamente" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * POST /api/fichajes/salida
+ * Registra la salida de un empleado.
+ * Busca la jornada abierta más reciente y la cierra con la hora actual.
+ */
+router.post("/salida", authMiddleware, async (req, res) => {
+  try {
+    const { empleado_id } = req.body;
+    const [rows] = await db.execute(
+      `SELECT id FROM fichajes
+       WHERE empleado_id = ? AND hora_salida IS NULL
+       ORDER BY fecha_entrada DESC, hora_entrada DESC
+       LIMIT 1`,
+      [empleado_id],
+    );
+    if (rows.length === 0)
+      return res
+        .status(400)
+        .json({ error: "No tienes ninguna entrada registrada sin salida." });
+
+    const hoy = new Date();
+    const fecha = hoy.toISOString().slice(0, 10);
+    const hora = hoy.toTimeString().slice(0, 8);
+    await db.execute(
+      "UPDATE fichajes SET fecha_salida = ?, hora_salida = ? WHERE id = ?",
+      [fecha, hora, rows[0].id],
+    );
+    res.json({ mensaje: "Salida registrada correctamente" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/fichajes/pendiente/:empleado_id
+ * Detecta si un empleado tiene una jornada sin cerrar de días anteriores.
+ * Se usa al iniciar sesión para mostrar el modal de incidencia.
+ */
+router.get("/pendiente/:empleado_id", authMiddleware, async (req, res) => {
+  try {
+    const { empleado_id } = req.params;
+    const [rows] = await db.execute(
+      `SELECT id, fecha_entrada, hora_entrada
+       FROM fichajes
+       WHERE empleado_id = ?
+         AND fecha_entrada < CURDATE()
+         AND hora_salida IS NULL
+         AND motivo_incidencia IS NULL
+       ORDER BY fecha_entrada DESC, hora_entrada DESC
+       LIMIT 1`,
+      [empleado_id],
+    );
+    if (rows.length === 0) return res.json({ pendiente: false });
+    res.json({
+      pendiente: true,
+      fichaje_id: rows[0].id,
+      fecha_entrada: rows[0].fecha_entrada,
+      hora_entrada: rows[0].hora_entrada,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/fichajes/:empleado_id
+ * Devuelve el historial de fichajes de un empleado filtrado por periodo.
+ * Acepta los parámetros:
+ * - periodo: "hoy" | "semana" | "mes"
+ * - fecha: fecha base para la navegación temporal (YYYY-MM-DD)
+ */
+router.get("/:empleado_id", authMiddleware, async (req, res) => {
+  try {
+    const { empleado_id } = req.params;
+    const { periodo, fecha } = req.query;
+    let condicion;
+
+    if (periodo === "hoy") {
+      const dia = fecha || new Date().toISOString().slice(0, 10);
+      condicion = `fecha_entrada = '${dia}'`;
+    } else if (periodo === "mes") {
+      const base = fecha ? new Date(fecha) : new Date();
+      const inicio = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-01`;
+      const fin = new Date(base.getFullYear(), base.getMonth() + 1, 0)
+        .toISOString()
+        .slice(0, 10);
+      condicion = `fecha_entrada BETWEEN '${inicio}' AND '${fin}'`;
+    } else {
+      // Por defecto semana
+      const base = fecha ? new Date(fecha) : new Date();
+      const dia = base.getDay() || 7;
+      const lunes = new Date(base);
+      lunes.setDate(base.getDate() - dia + 1);
+      const domingo = new Date(lunes);
+      domingo.setDate(lunes.getDate() + 6);
+      condicion = `fecha_entrada BETWEEN '${lunes.toISOString().slice(0, 10)}' AND '${domingo.toISOString().slice(0, 10)}'`;
+    }
+
+    const [rows] = await db.execute(
+      `SELECT * FROM fichajes WHERE empleado_id = ? AND ${condicion} ORDER BY fecha_entrada DESC, hora_entrada DESC`,
+      [empleado_id],
+    );
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * GET /api/fichajes
+ * Devuelve todos los fichajes del día actual con datos del empleado.
+ * Solo accesible por administradores.
+ */
+router.get("/", authMiddleware, soloAdmin, async (req, res) => {
+  try {
+    const [rows] = await db.execute(`
+      SELECT f.*, e.nombre, e.cargo
+      FROM fichajes f
+      JOIN empleados e ON f.empleado_id = e.id
+      WHERE f.fecha_entrada = CURDATE()
+      ORDER BY f.hora_entrada DESC
+    `);
+    res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/**
+ * PUT /api/fichajes/:id/incidencia
+ * Registra una incidencia en un fichaje sin salida.
+ * Requiere motivo y hora de salida real.
+ * Se usa cuando un empleado olvida fichar la salida.
+ */
+router.put("/:id/incidencia", authMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { motivo_incidencia, hora_salida_real, observaciones } = req.body;
+
+    if (!motivo_incidencia || !hora_salida_real)
+      return res
+        .status(400)
+        .json({ error: "Motivo y hora de salida son obligatorios" });
+
+    await db.execute(
+      `UPDATE fichajes
+       SET hora_salida_real = ?,
+           motivo_incidencia = ?,
+           observaciones = ?,
+           fecha_incidencia = NOW(),
+           fecha_salida = fecha_entrada,
+           hora_salida = ?
+       WHERE id = ?`,
+      [
+        hora_salida_real,
+        motivo_incidencia,
+        observaciones || null,
+        hora_salida_real,
+        id,
+      ],
+    );
+    res.json({ mensaje: "Incidencia registrada correctamente" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+module.exports = router;
