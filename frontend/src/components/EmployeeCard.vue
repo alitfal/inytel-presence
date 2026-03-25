@@ -1,21 +1,25 @@
 <script setup>
 /**
- * EmployeeCard.vue — Tarjeta de gestión de empleado
+ * EmployeeCard.vue — Tarjeta de empleado para la vista grid
  *
- * Visualiza la información básica de un empleado (nombre, cargo, estado actual)
- * y centraliza acciones administrativas en un menú desplegable.
+ * Muestra la información resumida de un empleado en formato tarjeta.
+ * Incluye un menú contextual de acciones accesible mediante el botón
+ * de tres puntos, con las siguientes opciones:
+ * - Resetear contraseña (con confirmación de doble campo)
+ * - Activar / Desactivar acceso a la aplicación
  *
- * Acciones incluidas:
- * - Cambio de contraseña (con validación interna)
- * - Activación/Desactivación de cuenta (borrado lógico)
- * - Acceso a la ficha detallada
+ * El menú se posiciona inteligentemente a izquierda o derecha
+ * según la posición de la tarjeta en la pantalla, evitando
+ * que se salga de los límites del viewport.
+ *
+ * Los empleados inactivos se muestran con opacidad reducida.
  *
  * Props:
- * @prop {Object} employee - Objeto con los datos del empleado (id, nombre, cargo, estado, activo)
+ * @prop {Object} employee - Datos completos del empleado
  *
  * Eventos emitidos:
- * @emits ver-ficha - Notifica la intención de abrir el detalle del empleado
- * @emits actualizar - Notifica que los datos del empleado han cambiado (ej: estado activo)
+ * @emits ver-ficha  - Solicita abrir el modal de ficha del empleado
+ * @emits actualizar - Solicita recargar la lista de empleados
  */
 
 import { ref } from "vue";
@@ -28,32 +32,28 @@ import {
 } from "lucide-vue-next";
 import axios from "axios";
 
-const props = defineProps({
-  employee: { type: Object, required: true },
-});
-
+const props = defineProps({ employee: { type: Object, required: true } });
 const emit = defineEmits(["ver-ficha", "actualizar"]);
 
-// --- ESTADO DE INTERFAZ (UI) ---
-const menuAbierto = ref(false); // Controla la visibilidad del dropdown de acciones
-const menuBtn = ref(null); // Referencia al elemento DOM para calcular colisiones
-const menuALaIzquierda = ref(false); // Flag para orientar el menú y evitar que salga de pantalla
-const mostrandoReset = ref(false); // Alterna entre las opciones del menú y el formulario de password
+// Estado del menú contextual
+const menuAbierto = ref(false);
+const menuBtn = ref(null); // Referencia al botón para calcular posición
+const menuALaIzquierda = ref(false); // Controla si el menú abre a izq. o der.
 
-// --- ESTADO DEL FORMULARIO DE RESETEO ---
+// Estado del formulario de reset de contraseña
+const mostrandoReset = ref(false);
 const passwordNueva = ref("");
 const passwordConfirm = ref("");
 const errorReset = ref("");
 const exitoReset = ref(false);
-
-// --- ESTADOS DE CARGA (LOADING) ---
 const loadingReset = ref(false);
 const loadingActivo = ref(false);
 
 /**
- * Gestiona la apertura del menú de acciones.
- * Calcula la posición del botón en el viewport para decidir si el menú
- * debe desplegarse hacia la izquierda o derecha, evitando desbordamientos.
+ * Abre o cierra el menú contextual.
+ * Al abrir, calcula la posición horizontal del botón para determinar
+ * si el menú debe desplegarse a la izquierda o a la derecha,
+ * evitando que se salga de la pantalla en columnas del lado izquierdo.
  */
 function toggleMenu() {
   if (!menuAbierto.value && menuBtn.value) {
@@ -61,8 +61,7 @@ function toggleMenu() {
     menuALaIzquierda.value = rect.left < window.innerWidth / 2;
   }
   menuAbierto.value = !menuAbierto.value;
-
-  // Limpieza de estados internos al cerrar o reabrir el menú
+  // Limpiar estado del formulario al abrir/cerrar
   errorReset.value = "";
   exitoReset.value = false;
   passwordNueva.value = "";
@@ -71,13 +70,12 @@ function toggleMenu() {
 }
 
 /**
- * Procesa el cambio de contraseña del empleado.
- * Realiza validaciones de longitud (mín. 6) y coincidencia antes de la petición.
- * Tras el éxito, muestra feedback visual y cierra el menú automáticamente.
+ * Valida y envía la nueva contraseña al backend.
+ * Requiere confirmación (doble campo) para evitar errores tipográficos.
+ * Cierra el menú automáticamente tras el éxito.
  */
 async function resetPassword() {
   errorReset.value = "";
-
   if (!passwordNueva.value || passwordNueva.value.length < 6) {
     errorReset.value = "Mínimo 6 caracteres";
     return;
@@ -86,18 +84,18 @@ async function resetPassword() {
     errorReset.value = "Las contraseñas no coinciden";
     return;
   }
-
   try {
     loadingReset.value = true;
     await axios.put(`/api/auth/reset/${props.employee.id}`, {
       password_nueva: passwordNueva.value,
     });
     exitoReset.value = true;
-
-    // Retraso de cortesía para que el usuario vea el mensaje de éxito
     setTimeout(() => {
       menuAbierto.value = false;
       mostrandoReset.value = false;
+      exitoReset.value = false;
+      passwordNueva.value = "";
+      passwordConfirm.value = "";
     }, 1500);
   } catch (err) {
     errorReset.value = err.response?.data?.error || "Error al resetear";
@@ -107,9 +105,9 @@ async function resetPassword() {
 }
 
 /**
- * Alterna el estado de cuenta (activo/inactivo) del empleado.
- * Realiza una petición PUT y emite 'actualizar' para que el componente
- * padre refresque la lista global.
+ * Alterna el estado activo/inactivo del empleado.
+ * Un empleado inactivo no puede hacer login ni fichar.
+ * Emite "actualizar" para que el padre recargue la lista.
  */
 async function toggleActivo() {
   try {
@@ -132,6 +130,7 @@ async function toggleActivo() {
     class="bg-white border border-slate-100 rounded-3xl p-4 sm:p-5 shadow-sm hover:shadow-xl hover:shadow-indigo-500/5 transition-all duration-300 group relative"
   >
     <div class="flex justify-between items-start mb-3">
+      <!-- Avatar con inicial del empleado — se vuelve indigo al hacer hover en la tarjeta -->
       <div
         class="w-10 h-10 sm:w-14 sm:h-14 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center text-base sm:text-xl font-bold text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300"
         :class="!employee.activo ? 'opacity-40' : ''"
@@ -139,6 +138,7 @@ async function toggleActivo() {
         {{ employee.nombre.charAt(0) }}
       </div>
 
+      <!-- Menú contextual de acciones -->
       <div class="relative">
         <button
           ref="menuBtn"
@@ -148,11 +148,16 @@ async function toggleActivo() {
           <MoreHorizontal class="w-5 h-5" />
         </button>
 
+        <!--
+          Dropdown del menú — se posiciona dinámicamente
+          a izquierda (left-0) o derecha (right-0) según la columna
+        -->
         <div
           v-if="menuAbierto"
           :class="menuALaIzquierda ? 'left-0' : 'right-0'"
           class="absolute top-8 bg-white border border-slate-100 rounded-2xl shadow-xl z-10 w-52 p-2"
         >
+          <!-- Vista principal del menú -->
           <div v-if="!mostrandoReset">
             <button
               @click="mostrandoReset = true"
@@ -183,6 +188,7 @@ async function toggleActivo() {
             </button>
           </div>
 
+          <!-- Vista de reset de contraseña con doble campo -->
           <div v-else class="px-1 py-1">
             <p class="text-xs font-bold text-slate-500 mb-2 px-2">
               Nueva contraseña
@@ -200,14 +206,12 @@ async function toggleActivo() {
               class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-400 transition-colors mb-2"
               @keyup.enter="resetPassword"
             />
-
             <p v-if="errorReset" class="text-rose-500 text-xs mb-2 px-1">
               {{ errorReset }}
             </p>
             <p v-if="exitoReset" class="text-emerald-500 text-xs mb-2 px-1">
               ✓ Actualizada
             </p>
-
             <div class="flex gap-2">
               <button
                 @click="mostrandoReset = false"
@@ -228,6 +232,7 @@ async function toggleActivo() {
       </div>
     </div>
 
+    <!-- Nombre y cargo — con opacidad reducida si el empleado está inactivo -->
     <div
       class="space-y-0.5 transition-opacity"
       :class="!employee.activo ? 'opacity-40' : ''"
@@ -244,11 +249,13 @@ async function toggleActivo() {
       </p>
     </div>
 
+    <!-- Estado de presencia y enlace a ficha -->
     <div
       class="mt-4 flex items-center justify-between transition-opacity"
       :class="!employee.activo ? 'opacity-40' : ''"
     >
       <div class="flex items-center gap-1.5">
+        <!-- Indicador de estado con pulso animado -->
         <span
           :class="[
             'w-2 h-2 rounded-full animate-pulse',
@@ -267,6 +274,7 @@ async function toggleActivo() {
       </button>
     </div>
 
+    <!-- Overlay invisible para cerrar el menú al clicar fuera -->
     <div
       v-if="menuAbierto"
       class="fixed inset-0 z-0"
