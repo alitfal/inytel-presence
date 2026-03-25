@@ -1,4 +1,25 @@
 <script setup>
+/**
+ * IncidenciaModal.vue — Modal de resolución de fichaje incompleto
+ *
+ * Se muestra automáticamente al iniciar sesión cuando el sistema detecta
+ * que el empleado tiene una jornada sin cerrar de un día anterior.
+ * El modal es bloqueante — no puede cerrarse sin resolver la incidencia.
+ *
+ * El empleado debe indicar:
+ * - Motivo por el que no fichó la salida
+ * - Hora real de salida de ese día
+ * - Observaciones opcionales
+ *
+ * Props:
+ * @prop {Number} fichajeId    - ID del fichaje sin cerrar
+ * @prop {String} fechaEntrada - Fecha del fichaje pendiente (YYYY-MM-DD)
+ * @prop {String} horaEntrada  - Hora de entrada registrada (HH:mm:ss)
+ *
+ * Eventos emitidos:
+ * @emits resuelta - Se emite cuando la incidencia se registra correctamente
+ */
+
 import { ref, computed } from "vue";
 import { AlertTriangle } from "lucide-vue-next";
 import axios from "axios";
@@ -11,23 +32,33 @@ const props = defineProps({
 
 const emit = defineEmits(["resuelta"]);
 
-const API = import.meta.env.VITE_API_URL
+// Campos del formulario de incidencia
 const motivo = ref("");
 const horaSalida = ref("");
 const observaciones = ref("");
 const loading = ref(false);
 const error = ref("");
 
+// Opciones disponibles para el motivo de la incidencia
 const motivoOpciones = [
   { value: "olvido", label: "Olvido" },
   { value: "error_aplicacion", label: "Error de aplicación" },
   { value: "otros", label: "Otros" },
 ];
 
+/**
+ * Formatea la hora de entrada a HH:mm para mostrarla en el mensaje.
+ * @returns {string} Hora formateada o "--:--" si no está disponible
+ */
 const horaEntradaFormateada = computed(
   () => props.horaEntrada?.slice(0, 5) || "--:--",
 );
 
+/**
+ * Formatea la fecha de entrada a texto legible en español.
+ * Se añade T12:00:00 para evitar desfases por zona horaria.
+ * @returns {string} Ejemplo: "lunes, 10 de marzo"
+ */
 const diaFormateado = computed(() =>
   new Date(props.fechaEntrada + "T12:00:00").toLocaleDateString("es-ES", {
     weekday: "long",
@@ -36,8 +67,15 @@ const diaFormateado = computed(() =>
   }),
 );
 
+/**
+ * Valida el formulario y envía la incidencia a la API.
+ * Actualiza el fichaje con el motivo, hora real de salida
+ * y observaciones opcionales.
+ * Emite "resuelta" si la operación es exitosa.
+ */
 async function resolver() {
   error.value = "";
+
   if (!motivo.value) {
     error.value = "Selecciona un motivo";
     return;
@@ -51,10 +89,10 @@ async function resolver() {
     loading.value = true;
     const token = localStorage.getItem("token");
     await axios.put(
-      `${API}/api/fichajes/${props.fichajeId}/incidencia`,
+      `/api/fichajes/${props.fichajeId}/incidencia`,
       {
         motivo_incidencia: motivo.value,
-        hora_salida_real: horaSalida.value, // solo TIME "HH:MM"
+        hora_salida_real: horaSalida.value,
         observaciones: observaciones.value || null,
       },
       { headers: { Authorization: `Bearer ${token}` } },
@@ -70,12 +108,12 @@ async function resolver() {
 </script>
 
 <template>
-  <!-- Overlay bloqueante — no se puede cerrar haciendo click fuera -->
+  <!-- Overlay bloqueante — no se puede cerrar haciendo clic fuera -->
   <div
     class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
   >
     <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
-      <!-- Icono -->
+      <!-- Icono de alerta -->
       <div
         class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mb-4"
       >
@@ -94,7 +132,7 @@ async function resolver() {
       </p>
 
       <div class="space-y-4 text-sm">
-        <!-- Motivo -->
+        <!-- Selector de motivo mediante radio buttons estilizados -->
         <div>
           <label class="text-slate-400 font-medium block mb-1">Motivo</label>
           <div class="flex flex-col gap-2">
@@ -119,7 +157,7 @@ async function resolver() {
           </div>
         </div>
 
-        <!-- Hora de salida -->
+        <!-- Input de hora de salida real -->
         <div>
           <label class="text-slate-400 font-medium block mb-1">
             ¿A qué hora saliste el {{ diaFormateado }}?
@@ -131,11 +169,11 @@ async function resolver() {
           />
         </div>
 
-        <!-- Observaciones -->
+        <!-- Textarea de observaciones (campo opcional) -->
         <div>
-          <label class="text-slate-400 font-medium block mb-1"
-            >Observaciones <span class="text-slate-300">(opcional)</span></label
-          >
+          <label class="text-slate-400 font-medium block mb-1">
+            Observaciones <span class="text-slate-300">(opcional)</span>
+          </label>
           <textarea
             v-model="observaciones"
             rows="2"
@@ -144,7 +182,6 @@ async function resolver() {
           />
         </div>
 
-        <!-- Error -->
         <p v-if="error" class="text-rose-500 text-xs font-medium">
           {{ error }}
         </p>

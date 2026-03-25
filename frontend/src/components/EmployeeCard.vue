@@ -1,4 +1,23 @@
 <script setup>
+/**
+ * EmployeeCard.vue — Tarjeta de gestión de empleado
+ *
+ * Visualiza la información básica de un empleado (nombre, cargo, estado actual)
+ * y centraliza acciones administrativas en un menú desplegable.
+ *
+ * Acciones incluidas:
+ * - Cambio de contraseña (con validación interna)
+ * - Activación/Desactivación de cuenta (borrado lógico)
+ * - Acceso a la ficha detallada
+ *
+ * Props:
+ * @prop {Object} employee - Objeto con los datos del empleado (id, nombre, cargo, estado, activo)
+ *
+ * Eventos emitidos:
+ * @emits ver-ficha - Notifica la intención de abrir el detalle del empleado
+ * @emits actualizar - Notifica que los datos del empleado han cambiado (ej: estado activo)
+ */
+
 import { ref } from "vue";
 import {
   MoreHorizontal,
@@ -9,26 +28,41 @@ import {
 } from "lucide-vue-next";
 import axios from "axios";
 
-const props = defineProps({ employee: { type: Object, required: true } });
+const props = defineProps({
+  employee: { type: Object, required: true },
+});
+
 const emit = defineEmits(["ver-ficha", "actualizar"]);
 
-const menuAbierto = ref(false);
-const menuBtn = ref(null);
-const menuALaIzquierda = ref(false);
-const mostrandoReset = ref(false);
+// --- ESTADO DE INTERFAZ (UI) ---
+const menuAbierto = ref(false); // Controla la visibilidad del dropdown de acciones
+const menuBtn = ref(null); // Referencia al elemento DOM para calcular colisiones
+const menuALaIzquierda = ref(false); // Flag para orientar el menú y evitar que salga de pantalla
+const mostrandoReset = ref(false); // Alterna entre las opciones del menú y el formulario de password
+
+// --- ESTADO DEL FORMULARIO DE RESETEO ---
 const passwordNueva = ref("");
 const passwordConfirm = ref("");
 const errorReset = ref("");
 const exitoReset = ref(false);
+
+// --- ESTADOS DE CARGA (LOADING) ---
 const loadingReset = ref(false);
 const loadingActivo = ref(false);
 
+/**
+ * Gestiona la apertura del menú de acciones.
+ * Calcula la posición del botón en el viewport para decidir si el menú
+ * debe desplegarse hacia la izquierda o derecha, evitando desbordamientos.
+ */
 function toggleMenu() {
   if (!menuAbierto.value && menuBtn.value) {
     const rect = menuBtn.value.getBoundingClientRect();
     menuALaIzquierda.value = rect.left < window.innerWidth / 2;
   }
   menuAbierto.value = !menuAbierto.value;
+
+  // Limpieza de estados internos al cerrar o reabrir el menú
   errorReset.value = "";
   exitoReset.value = false;
   passwordNueva.value = "";
@@ -36,8 +70,14 @@ function toggleMenu() {
   mostrandoReset.value = false;
 }
 
+/**
+ * Procesa el cambio de contraseña del empleado.
+ * Realiza validaciones de longitud (mín. 6) y coincidencia antes de la petición.
+ * Tras el éxito, muestra feedback visual y cierra el menú automáticamente.
+ */
 async function resetPassword() {
   errorReset.value = "";
+
   if (!passwordNueva.value || passwordNueva.value.length < 6) {
     errorReset.value = "Mínimo 6 caracteres";
     return;
@@ -46,18 +86,18 @@ async function resetPassword() {
     errorReset.value = "Las contraseñas no coinciden";
     return;
   }
+
   try {
     loadingReset.value = true;
     await axios.put(`/api/auth/reset/${props.employee.id}`, {
       password_nueva: passwordNueva.value,
     });
     exitoReset.value = true;
+
+    // Retraso de cortesía para que el usuario vea el mensaje de éxito
     setTimeout(() => {
       menuAbierto.value = false;
       mostrandoReset.value = false;
-      exitoReset.value = false;
-      passwordNueva.value = "";
-      passwordConfirm.value = "";
     }, 1500);
   } catch (err) {
     errorReset.value = err.response?.data?.error || "Error al resetear";
@@ -66,6 +106,11 @@ async function resetPassword() {
   }
 }
 
+/**
+ * Alterna el estado de cuenta (activo/inactivo) del empleado.
+ * Realiza una petición PUT y emite 'actualizar' para que el componente
+ * padre refresque la lista global.
+ */
 async function toggleActivo() {
   try {
     loadingActivo.value = true;
@@ -102,6 +147,7 @@ async function toggleActivo() {
         >
           <MoreHorizontal class="w-5 h-5" />
         </button>
+
         <div
           v-if="menuAbierto"
           :class="menuALaIzquierda ? 'left-0' : 'right-0'"
@@ -136,6 +182,7 @@ async function toggleActivo() {
               Cancelar
             </button>
           </div>
+
           <div v-else class="px-1 py-1">
             <p class="text-xs font-bold text-slate-500 mb-2 px-2">
               Nueva contraseña
@@ -153,12 +200,14 @@ async function toggleActivo() {
               class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-400 transition-colors mb-2"
               @keyup.enter="resetPassword"
             />
+
             <p v-if="errorReset" class="text-rose-500 text-xs mb-2 px-1">
               {{ errorReset }}
             </p>
             <p v-if="exitoReset" class="text-emerald-500 text-xs mb-2 px-1">
               ✓ Actualizada
             </p>
+
             <div class="flex gap-2">
               <button
                 @click="mostrandoReset = false"
