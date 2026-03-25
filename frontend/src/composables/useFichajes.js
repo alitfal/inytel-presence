@@ -3,13 +3,14 @@
  *
  * Gestiona el estado de los registros horarios, la navegación por periodos
  * (día, semana, mes) y las acciones de entrada/salida de empleados.
- * * Funcionalidades principales:
+ *
+ * Funcionalidades principales:
  * - Obtención de historial desde API con filtrado dinámico.
  * - Cálculo de etiquetas temporales para navegación (UI).
  * - Procesamiento y formateo de datos de jornada para visualización.
  * - Gestión de errores y estados de carga.
  *
- * Usado habitualmente en vistas de Panel de Control o Historial de Empleado.
+ * Usado en: EmployeeModal, PerfilView y cualquier vista con historial de fichajes.
  */
 
 import { ref, computed } from "vue";
@@ -18,31 +19,35 @@ import axios from "axios";
 export function useFichajes() {
   // --- ESTADO REACTIVO ---
 
-  // Listado de registros obtenidos del servidor
+  /** Listado de jornadas obtenidas del servidor para el periodo activo. */
   const historial = ref([]);
 
-  // Estado de carga para feedback visual (spinners/esqueletos)
+  /** Boolean: true mientras se espera respuesta de la API de historial. */
   const loadingHistorial = ref(false);
 
-  // Filtro temporal seleccionado: "hoy", "semana" o "mes"
+  /** Filtro temporal activo: "hoy" | "semana" | "mes". */
   const periodoActivo = ref("semana");
 
-  // Mensaje de error descriptivo capturado tras un fallo en la API
+  /** Mensaje de error descriptivo capturado tras un fallo en la API de fichajes. */
   const errorFichaje = ref("");
 
-  // Desplazamiento respecto al periodo actual (0=actual, -1=anterior, +1=siguiente)
+  /**
+   * Desplazamiento respecto al periodo actual.
+   * 0 = periodo actual, -1 = anterior, +1 = siguiente.
+   */
   const offset = ref(0);
 
   // --- COMPUTED PROPERTIES ---
 
   /**
-   * Genera la etiqueta de texto para la navegación según el periodo y offset.
-   * Ejemplo: "lun, 20 mar", "18 mar – 24 mar" o "marzo de 2026".
-   * * @returns {string} Texto formateado para mostrar en el selector de fechas.
+   * Genera la etiqueta de texto legible para el navegador de periodos.
+   * Ejemplos: "lun, 20 mar" | "18 mar – 24 mar" | "marzo de 2026".
+   *
+   * @returns {string} Texto formateado según periodoActivo y offset.
    */
   const etiquetaPeriodo = computed(() => {
     const hoy = new Date();
-    
+
     if (periodoActivo.value === "hoy") {
       const d = new Date(hoy);
       d.setDate(d.getDate() + offset.value);
@@ -52,7 +57,7 @@ export function useFichajes() {
         month: "short",
       });
     }
-    
+
     if (periodoActivo.value === "semana") {
       const d = new Date(hoy);
       d.setDate(d.getDate() + offset.value * 7);
@@ -65,29 +70,32 @@ export function useFichajes() {
         x.toLocaleDateString("es-ES", { day: "2-digit", month: "short" });
       return `${fmt(lunes)} – ${fmt(domingo)}`;
     }
-    
+
     if (periodoActivo.value === "mes") {
       const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset.value, 1);
       return d.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
     }
-    
+
     return "";
   });
 
   // --- MÉTODOS DE APOYO (HELPERS) ---
 
   /**
-   * Construye el objeto de parámetros necesario para la consulta a la API
+   * Construye el objeto de parámetros para la query string de la API
    * basándose en el estado actual de periodoActivo y offset.
-   * * @returns {Object} Payload con el tipo de periodo y la fecha de referencia.
+   *
+   * @returns {Object} Payload con periodo y fecha de referencia (YYYY-MM-DD).
    */
   function getParams() {
     const hoy = new Date();
+
     if (periodoActivo.value === "hoy") {
       const d = new Date(hoy);
       d.setDate(d.getDate() + offset.value);
       return { periodo: "hoy", fecha: d.toISOString().slice(0, 10) };
     }
+
     if (periodoActivo.value === "semana") {
       const d = new Date(hoy);
       d.setDate(d.getDate() + offset.value * 7);
@@ -96,10 +104,12 @@ export function useFichajes() {
       lunes.setDate(d.getDate() - dia + 1);
       return { periodo: "semana", fecha: lunes.toISOString().slice(0, 10) };
     }
+
     if (periodoActivo.value === "mes") {
       const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset.value, 1);
       return { periodo: "mes", fecha: d.toISOString().slice(0, 10) };
     }
+
     return { periodo: periodoActivo.value };
   }
 
@@ -107,10 +117,18 @@ export function useFichajes() {
 
   /**
    * Recupera el historial de fichajes de la API para un empleado específico.
-   * Incluye la cabecera de autorización Bearer Token.
-   * * @param {number|string} empleado_id - ID del empleado a consultar.
+   *
+   * FIX: acepta un segundo parámetro `periodo` opcional. Si se proporciona,
+   * actualiza periodoActivo antes de construir los parámetros de la consulta.
+   * Esto evita que llamadas como fetchHistorial(id, "semana") ignoren el periodo.
+   *
+   * @param {number|string} empleado_id - ID del empleado a consultar.
+   * @param {string|null} [periodo=null] - Periodo a activar antes de la consulta.
    */
-  async function fetchHistorial(empleado_id) {
+  async function fetchHistorial(empleado_id, periodo = null) {
+    // Si se pasa periodo explícito, aplicarlo antes de calcular los params
+    if (periodo) periodoActivo.value = periodo;
+
     try {
       loadingHistorial.value = true;
       const token = localStorage.getItem("token");
@@ -129,20 +147,27 @@ export function useFichajes() {
   }
 
   /**
-   * Cambia el tipo de filtro temporal y reinicia el offset a cero.
-   * * @param {number|string} empleado_id - ID del empleado.
-   * @param {string} periodo - Nuevo periodo ("hoy", "semana", "mes").
+   * Cambia el tipo de filtro temporal, resetea el offset a 0,
+   * limpia el historial visible y recarga los datos.
+   *
+   * FIX: se limpia historial antes de recargar para evitar que el contenido
+   * anterior permanezca visible durante la carga del nuevo periodo.
+   *
+   * @param {number|string} empleado_id - ID del empleado.
+   * @param {string} periodo - Nuevo periodo: "hoy" | "semana" | "mes".
    */
   async function cambiarPeriodo(empleado_id, periodo) {
     periodoActivo.value = periodo;
     offset.value = 0;
+    historial.value = []; // limpiar antes de recargar para evitar parpadeo
     await fetchHistorial(empleado_id);
   }
 
   /**
    * Desplaza la ventana temporal hacia adelante o atrás y actualiza los datos.
-   * * @param {number|string} empleado_id - ID del empleado.
-   * @param {number} dir - Dirección del desplazamiento (1 o -1).
+   *
+   * @param {number|string} empleado_id - ID del empleado.
+   * @param {number} dir - Dirección: -1 (anterior) o +1 (siguiente).
    */
   async function navegarPeriodo(empleado_id, dir) {
     offset.value += dir;
@@ -150,10 +175,11 @@ export function useFichajes() {
   }
 
   /**
-   * Registra un nuevo evento de fichaje (Entrada o Salida).
-   * * @param {number|string} empleado_id - ID del empleado que ficha.
-   * @param {string} tipo - Tipo de acción: "ENTRADA" o "SALIDA".
-   * @returns {Promise<Object>} Resultado de la operación { ok: boolean, error?: string }.
+   * Registra un nuevo evento de fichaje (Entrada o Salida) y recarga el historial.
+   *
+   * @param {number|string} empleado_id - ID del empleado que ficha.
+   * @param {string} tipo - Tipo de acción: "ENTRADA" | "SALIDA".
+   * @returns {Promise<{ok: boolean, error?: string}>} Resultado de la operación.
    */
   async function fichar(empleado_id, tipo) {
     errorFichaje.value = "";
@@ -176,10 +202,11 @@ export function useFichajes() {
   // --- FORMATEO DE DATOS PARA UI ---
 
   /**
-   * Transforma un objeto de jornada crudo del back-end a un formato
-   * optimizado para su visualización en tablas o tarjetas.
-   * * @param {Object} jornada - Registro de jornada original.
-   * @returns {Object} Jornada procesada con campos formateados.
+   * Transforma un objeto de jornada crudo del backend a un formato
+   * optimizado para su visualización en tarjetas o tablas.
+   *
+   * @param {Object} jornada - Registro de jornada original.
+   * @returns {{fecha: string, entrada: string, salida: string|null, duracion: string|null, incidencia: boolean}}
    */
   function formatJornada(jornada) {
     const fecha = formatFecha(jornada.fecha_entrada);
@@ -199,9 +226,11 @@ export function useFichajes() {
   }
 
   /**
-   * Convierte una cadena de fecha o Date a formato legible: "lun, 10/05/2026".
-   * * @param {string|Date} fecha 
-   * @returns {string} Fecha formateada en es-ES.
+   * Convierte una cadena de fecha o instancia Date a formato legible en español.
+   * Normaliza a mediodía (T12:00:00) para evitar desfases de zona horaria.
+   *
+   * @param {string|Date} fecha - Fecha a formatear.
+   * @returns {string} Ejemplo: "lun, 10/05/2026".
    */
   function formatFecha(fecha) {
     if (!fecha) return "";
@@ -218,11 +247,12 @@ export function useFichajes() {
   }
 
   /**
-   * Calcula la diferencia temporal entre dos horas y devuelve un string legible.
-   * Ejemplo: "8h 30m".
-   * * @param {string} horaEntrada - HH:mm:ss
-   * @param {string} horaSalida - HH:mm:ss
-   * @returns {string|null} Duración formateada o null si faltan datos.
+   * Calcula la diferencia entre dos horas y devuelve un string legible.
+   * Devuelve null si faltan datos o si la diferencia es negativa o cero.
+   *
+   * @param {string} horaEntrada - Formato HH:mm:ss o HH:mm.
+   * @param {string} horaSalida  - Formato HH:mm:ss o HH:mm.
+   * @returns {string|null} Ejemplo: "8h 30m" | "45m" | null.
    */
   function calcularDuracion(horaEntrada, horaSalida) {
     if (!horaEntrada || !horaSalida) return null;
@@ -236,8 +266,9 @@ export function useFichajes() {
   }
 
   /**
-   * Formatea una fecha y hora completa.
-   * * @param {string|Date} fechaHora 
+   * Formatea una fecha y hora completa en formato corto español.
+   *
+   * @param {string|Date} fechaHora - Fecha y hora a formatear.
    * @returns {string} Ejemplo: "10/05/2026, 08:30".
    */
   function formatFechaHora(fechaHora) {

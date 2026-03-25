@@ -140,7 +140,7 @@ async function fetchStats() {
       fechaDesde.value && fechaHasta.value
         ? `?desde=${fechaDesde.value}&hasta=${fechaHasta.value}`
         : "";
-    const { data } = await axios.get(`${API}/stats${params}`, {
+    const { data } = await axios.get(`${API}/dashboard/stats${params}`, {
       headers: headers(),
     });
     stats.value = data;
@@ -206,7 +206,11 @@ async function fetchResumenSemanal() {
       activos.map((e) =>
         axios
           .get(`${API}/empleados/${e.id}/horas`, { headers: headers() })
-          .then((r) => ({ ...r.data, nombre: e.nombre, cargo: e.cargo }))
+          .then((r) => {
+            // Guardia: descartar si el empleado no tiene nombre válido
+            if (!e.nombre) return null;
+            return { ...r.data, nombre: e.nombre, cargo: e.cargo };
+          })
           .catch(() => null),
       ),
     );
@@ -311,10 +315,7 @@ function nombreMes(fecha) {
 const mostrarCambiarPassword = ref(false);
 const credencialesNuevas = ref(null);
 
-const {
-  crearEmpleado,
-  editarEmpleado,
-} = useEmployees();
+const { crearEmpleado, editarEmpleado } = useEmployees();
 
 const {
   mostrarFormulario,
@@ -370,7 +371,7 @@ onMounted(() => {
           </p>
         </div>
 
-        <!-- Botón refresh — mismo estilo que EquipoView -->
+        <!-- Botón refresh -->
         <div class="flex items-center gap-2">
           <span
             v-if="ultimaActualizacion"
@@ -643,7 +644,8 @@ onMounted(() => {
               <div
                 class="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0"
               >
-                {{ emp.nombre.charAt(0) }}
+                <!-- FIX: optional chaining para evitar crash si nombre es undefined -->
+                {{ emp.nombre?.charAt(0) ?? "?" }}
               </div>
               <div class="flex-1 min-w-0">
                 <p class="font-bold text-slate-800 text-sm truncate">
@@ -781,7 +783,8 @@ onMounted(() => {
               <div
                 class="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 text-xs font-bold shrink-0"
               >
-                {{ emp.nombre.charAt(0) }}
+                <!-- FIX: optional chaining para evitar crash si nombre es undefined -->
+                {{ emp.nombre?.charAt(0) ?? "?" }}
               </div>
               <div class="flex-1 min-w-0">
                 <p class="font-bold text-slate-800 text-sm truncate">
@@ -881,40 +884,60 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <EmployeeForm
-  v-if="mostrarFormulario"
-  :formData="formData"
-  :erroresCampo="erroresCampo"
-  :tocados="tocados"
-  :modoEdicion="modoEdicion"
-  :claseCampo="claseCampo"
-  :marcarTocado="marcarTocado"
-  @guardar="guardarEmpleado"
-  @cancelar="cerrarFormulario"
-/>
 
-<!-- Modal credenciales nuevas -->
-<div v-if="credencialesNuevas" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-  <div class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm shadow-2xl">
-    <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4">
-      <span class="text-emerald-600 text-xl font-bold">✓</span>
-    </div>
-    <h2 class="text-xl font-bold text-slate-900 mb-1">Empleado creado</h2>
-    <p class="text-slate-400 text-sm mb-6">Comparte estas credenciales con el empleado</p>
-    <div class="space-y-3 text-sm">
-      <div class="bg-slate-50 rounded-2xl px-4 py-3 flex justify-between items-center gap-2">
-        <span class="text-slate-400 font-medium shrink-0">Email</span>
-        <span class="text-slate-700 font-bold truncate">{{ credencialesNuevas.email }}</span>
+    <!-- Formulario nuevo/editar empleado -->
+    <EmployeeForm
+      v-if="mostrarFormulario"
+      :formData="formData"
+      :erroresCampo="erroresCampo"
+      :tocados="tocados"
+      :modoEdicion="modoEdicion"
+      :claseCampo="claseCampo"
+      :marcarTocado="marcarTocado"
+      @guardar="guardarEmpleado"
+      @cancelar="cerrarFormulario"
+    />
+
+    <!-- Modal credenciales nuevas -->
+    <div
+      v-if="credencialesNuevas"
+      class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+    >
+      <div class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm shadow-2xl">
+        <div
+          class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4"
+        >
+          <span class="text-emerald-600 text-xl font-bold">✓</span>
+        </div>
+        <h2 class="text-xl font-bold text-slate-900 mb-1">Empleado creado</h2>
+        <p class="text-slate-400 text-sm mb-6">
+          Comparte estas credenciales con el empleado
+        </p>
+        <div class="space-y-3 text-sm">
+          <div
+            class="bg-slate-50 rounded-2xl px-4 py-3 flex justify-between items-center gap-2"
+          >
+            <span class="text-slate-400 font-medium shrink-0">Email</span>
+            <span class="text-slate-700 font-bold truncate">{{
+              credencialesNuevas.email
+            }}</span>
+          </div>
+          <div
+            class="bg-slate-50 rounded-2xl px-4 py-3 flex justify-between items-center gap-2"
+          >
+            <span class="text-slate-400 font-medium shrink-0">Contraseña</span>
+            <span class="text-slate-700 font-bold">{{
+              credencialesNuevas.password
+            }}</span>
+          </div>
+        </div>
+        <button
+          @click="credencialesNuevas = null"
+          class="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-colors cursor-pointer"
+        >
+          Entendido
+        </button>
       </div>
-      <div class="bg-slate-50 rounded-2xl px-4 py-3 flex justify-between items-center gap-2">
-        <span class="text-slate-400 font-medium shrink-0">Contraseña</span>
-        <span class="text-slate-700 font-bold">{{ credencialesNuevas.password }}</span>
-      </div>
     </div>
-    <button @click="credencialesNuevas = null" class="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-colors cursor-pointer">
-      Entendido
-    </button>
-  </div>
-</div>
   </AdminLayout>
 </template>

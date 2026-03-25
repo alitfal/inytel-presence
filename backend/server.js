@@ -31,7 +31,7 @@ app.use(express.static(path.join(__dirname, "../frontend/dist")));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/empleados", require("./routes/empleados"));
 app.use("/api/fichajes", require("./routes/fichajes"));
-app.use("/api", require("./routes/dashboard"));
+app.use("/api/dashboard", require("./routes/dashboard"));
 
 // Redirige cualquier ruta desconocida al frontend (SPA)
 app.get("*", (req, res) => {
