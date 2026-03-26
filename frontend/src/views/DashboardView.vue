@@ -502,7 +502,7 @@ onMounted(() => {
         >
           Cargando...
         </div>
-        <div v-else class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div v-else-if="stats" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
             <p class="text-sm font-bold text-slate-700 mb-3">
               Fichajes por hora (hoy)
@@ -548,6 +548,9 @@ onMounted(() => {
             </div>
           </div>
         </div>
+        <div v-else class="text-center py-12 text-slate-300 text-sm">
+  No se pudieron cargar los datos
+</div>
       </div>
 
       <!-- Calendario + lista fichajes del día -->
