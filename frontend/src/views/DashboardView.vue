@@ -361,9 +361,7 @@ onMounted(() => {
       <!-- Cabecera -->
       <div class="flex items-center justify-between gap-3">
         <div>
-          <h2
-            class="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 italic"
-          >
+          <h2 class="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 italic">
             Dashboard
           </h2>
           <p class="text-slate-400 mt-1 hidden sm:block">
@@ -373,39 +371,22 @@ onMounted(() => {
 
         <!-- Botón refresh -->
         <div class="flex items-center gap-2">
-          <span
-            v-if="ultimaActualizacion"
-            class="text-xs font-medium transition-colors duration-700 hidden sm:inline"
-            :class="flashVerde ? 'text-emerald-500' : 'text-slate-400'"
-          >
+          <span v-if="ultimaActualizacion" class="text-xs font-medium transition-colors duration-700 hidden sm:inline"
+            :class="flashVerde ? 'text-emerald-500' : 'text-slate-400'">
             Actualizado {{ ultimaActualizacion }}
           </span>
-          <button
-            @click="refrescarTodo"
-            :disabled="loadingRefresh"
-            class="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-600 font-bold text-sm rounded-xl transition-all cursor-pointer"
-          >
-            <span
-              :class="loadingRefresh ? 'animate-spin' : ''"
-              class="inline-block text-base"
-              >↻</span
-            >
+          <button @click="refrescarTodo" :disabled="loadingRefresh"
+            class="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 disabled:opacity-50 text-slate-600 font-bold text-sm rounded-xl transition-all cursor-pointer">
+            <span :class="loadingRefresh ? 'animate-spin' : ''" class="inline-block text-base">↻</span>
             <span class="hidden sm:inline">Actualizar</span>
           </button>
         </div>
       </div>
 
       <!-- Tarjetas resumen -->
-      <div
-        v-if="!loading && stats"
-        class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6"
-      >
-        <div
-          class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm"
-        >
-          <p
-            class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2"
-          >
+      <div v-if="!loading && stats" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm">
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
             Total empleados
           </p>
           <p class="text-3xl sm:text-4xl font-black text-slate-900">
@@ -413,12 +394,8 @@ onMounted(() => {
           </p>
           <div class="mt-3 w-8 h-1 bg-indigo-600 rounded-full"></div>
         </div>
-        <div
-          class="bg-emerald-500 rounded-3xl p-4 sm:p-6 shadow-sm shadow-emerald-200"
-        >
-          <p
-            class="text-emerald-100 text-xs font-bold uppercase tracking-wider mb-2"
-          >
+        <div class="bg-emerald-500 rounded-3xl p-4 sm:p-6 shadow-sm shadow-emerald-200">
+          <p class="text-emerald-100 text-xs font-bold uppercase tracking-wider mb-2">
             Dentro ahora
           </p>
           <p class="text-3xl sm:text-4xl font-black text-white">
@@ -426,12 +403,8 @@ onMounted(() => {
           </p>
           <div class="mt-3 w-8 h-1 bg-white/40 rounded-full"></div>
         </div>
-        <div
-          class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm"
-        >
-          <p
-            class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2"
-          >
+        <div class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm">
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">
             Fuera ahora
           </p>
           <p class="text-3xl sm:text-4xl font-black text-slate-900">
@@ -439,12 +412,8 @@ onMounted(() => {
           </p>
           <div class="mt-3 w-8 h-1 bg-slate-200 rounded-full"></div>
         </div>
-        <div
-          class="bg-indigo-600 rounded-3xl p-4 sm:p-6 shadow-sm shadow-indigo-200"
-        >
-          <p
-            class="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-2"
-          >
+        <div class="bg-indigo-600 rounded-3xl p-4 sm:p-6 shadow-sm shadow-indigo-200">
+          <p class="text-indigo-200 text-xs font-bold uppercase tracking-wider mb-2">
             Fichajes hoy
           </p>
           <p class="text-3xl sm:text-4xl font-black text-white">
@@ -455,9 +424,7 @@ onMounted(() => {
       </div>
 
       <!-- Gráficas con filtro de fechas -->
-      <div
-        class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm"
-      >
+      <div class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm">
         <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
             <h3 class="font-bold text-slate-900">Actividad de fichajes</h3>
@@ -466,40 +433,26 @@ onMounted(() => {
             </p>
           </div>
           <div class="flex items-center gap-2 flex-wrap">
-            <input
-              v-model="fechaDesde"
-              type="date"
-              class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-400 transition-colors"
-            />
+            <input v-model="fechaDesde" type="date"
+              class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-400 transition-colors" />
             <span class="text-slate-400 text-sm">—</span>
-            <input
-              v-model="fechaHasta"
-              type="date"
-              class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-400 transition-colors"
-            />
-            <button
-              @click="fetchStats"
-              class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors cursor-pointer"
-            >
+            <input v-model="fechaHasta" type="date"
+              class="border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-indigo-400 transition-colors" />
+            <button @click="fetchStats"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors cursor-pointer">
               Filtrar
             </button>
-            <button
-              v-if="fechaDesde || fechaHasta"
-              @click="
-                fechaDesde = '';
-                fechaHasta = '';
-                fetchStats();
-              "
-              class="bg-slate-100 text-slate-500 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors cursor-pointer"
-            >
+            <button v-if="fechaDesde || fechaHasta" @click="
+              fechaDesde = '';
+            fechaHasta = '';
+            fetchStats();
+            "
+              class="bg-slate-100 text-slate-500 px-4 py-2 rounded-xl text-sm font-bold hover:bg-slate-200 transition-colors cursor-pointer">
               Limpiar
             </button>
           </div>
         </div>
-        <div
-          v-if="loading"
-          class="flex justify-center py-12 animate-pulse text-indigo-600 font-bold"
-        >
+        <div v-if="loading" class="flex justify-center py-12 animate-pulse text-indigo-600 font-bold">
           Cargando...
         </div>
         <div v-else-if="stats" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -508,15 +461,8 @@ onMounted(() => {
               Fichajes por hora (hoy)
             </p>
             <div class="h-48">
-              <Bar
-                v-if="stats?.por_horas?.length"
-                :data="chartPorHoras"
-                :options="chartOptions"
-              />
-              <div
-                v-else
-                class="h-full flex items-center justify-center text-slate-300 text-sm"
-              >
+              <Bar v-if="stats?.por_horas?.length" :data="chartPorHoras" :options="chartOptions" />
+              <div v-else class="h-full flex items-center justify-center text-slate-300 text-sm">
                 Sin fichajes hoy
               </div>
             </div>
@@ -524,96 +470,68 @@ onMounted(() => {
           <div>
             <p class="text-sm font-bold text-slate-700 mb-3">
               Fichajes por día
-              <span
-                v-if="fechaDesde && fechaHasta"
-                class="text-indigo-500 font-normal text-xs ml-1"
-                >(rango seleccionado)</span
-              >
-              <span v-else class="text-slate-400 font-normal text-xs ml-1"
-                >(últimos 7 días)</span
-              >
+              <span v-if="fechaDesde && fechaHasta" class="text-indigo-500 font-normal text-xs ml-1">(rango
+                seleccionado)</span>
+              <span v-else class="text-slate-400 font-normal text-xs ml-1">(últimos 7 días)</span>
             </p>
             <div class="h-48">
-              <Bar
-                v-if="stats?.por_dias?.length"
-                :data="chartPorDias"
-                :options="chartOptions"
-              />
-              <div
-                v-else
-                class="h-full flex items-center justify-center text-slate-300 text-sm"
-              >
+              <Bar v-if="stats?.por_dias?.length" :data="chartPorDias" :options="chartOptions" />
+              <div v-else class="h-full flex items-center justify-center text-slate-300 text-sm">
                 Sin datos
               </div>
             </div>
           </div>
         </div>
         <div v-else class="text-center py-12 text-slate-300 text-sm">
-  No se pudieron cargar los datos
-</div>
+          No se pudieron cargar los datos
+        </div>
       </div>
 
       <!-- Calendario + lista fichajes del día -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div
-          class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm"
-        >
+        <div class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm">
           <div class="flex items-center justify-between mb-4">
             <h3 class="font-bold text-slate-900 flex items-center gap-2">
               <CalendarDays class="w-4 h-4 text-indigo-500" /> Calendario
             </h3>
             <div class="flex items-center gap-1">
-              <button
-                @click="cambiarMes(-1)"
-                class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 cursor-pointer transition-colors"
-              >
+              <button @click="cambiarMes(-1)"
+                class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 cursor-pointer transition-colors">
                 <ChevronLeft class="w-4 h-4" />
               </button>
               <span class="text-xs font-bold text-slate-600 px-2 capitalize">{{
                 nombreMes(mesActual)
-              }}</span>
-              <button
-                @click="cambiarMes(1)"
-                class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 cursor-pointer transition-colors"
-              >
+                }}</span>
+              <button @click="cambiarMes(1)"
+                class="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 cursor-pointer transition-colors">
                 <ChevronRight class="w-4 h-4" />
               </button>
             </div>
           </div>
           <div class="grid grid-cols-7 mb-2">
-            <div
-              v-for="d in ['L', 'M', 'X', 'J', 'V', 'S', 'D']"
-              :key="d"
-              class="text-center text-xs font-bold text-slate-400 py-1"
-            >
+            <div v-for="d in ['L', 'M', 'X', 'J', 'V', 'S', 'D']" :key="d"
+              class="text-center text-xs font-bold text-slate-400 py-1">
               {{ d }}
             </div>
           </div>
           <div class="grid grid-cols-7 gap-1">
-            <div
-              v-for="(dia, i) in diasCalendario"
-              :key="i"
-              @click="seleccionarDia(dia)"
-              :class="[
-                'h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-all',
-                !dia ? '' : 'cursor-pointer',
-                esDiaSeleccionado(dia)
-                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
-                  : esHoy(dia)
-                    ? 'bg-indigo-50 text-indigo-600 font-bold'
-                    : dia
-                      ? 'hover:bg-slate-100 text-slate-600'
-                      : '',
-              ]"
-            >
+            <div v-for="(dia, i) in diasCalendario" :key="i" @click="seleccionarDia(dia)" :class="[
+              'h-9 flex items-center justify-center rounded-xl text-sm font-medium transition-all',
+              !dia ? '' : 'cursor-pointer',
+              esDiaSeleccionado(dia)
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-200'
+                : esHoy(dia)
+                  ? 'bg-indigo-50 text-indigo-600 font-bold'
+                  : dia
+                    ? 'hover:bg-slate-100 text-slate-600'
+                    : '',
+            ]">
               {{ dia || "" }}
             </div>
           </div>
         </div>
 
-        <div
-          class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm flex flex-col"
-        >
+        <div class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm flex flex-col">
           <h3 class="font-bold text-slate-900 mb-1">
             Fichajes del
             {{
@@ -626,27 +544,19 @@ onMounted(() => {
           <p class="text-slate-400 text-xs mb-4">
             Empleados que registraron actividad
           </p>
-          <div
-            v-if="loadingCalendario"
-            class="flex-1 flex items-center justify-center animate-pulse text-indigo-600 text-sm font-bold"
-          >
+          <div v-if="loadingCalendario"
+            class="flex-1 flex items-center justify-center animate-pulse text-indigo-600 text-sm font-bold">
             Cargando...
           </div>
-          <div
-            v-else-if="calendarioData.length === 0"
-            class="flex-1 flex items-center justify-center text-slate-300 text-sm"
-          >
+          <div v-else-if="calendarioData.length === 0"
+            class="flex-1 flex items-center justify-center text-slate-300 text-sm">
             Sin fichajes ese día
           </div>
           <div v-else class="space-y-2 overflow-y-auto flex-1 max-h-64">
-            <div
-              v-for="emp in calendarioData"
-              :key="emp.id"
-              class="flex items-center gap-3 bg-slate-50 rounded-2xl px-4 py-3"
-            >
+            <div v-for="emp in calendarioData" :key="emp.id"
+              class="flex items-center gap-3 bg-slate-50 rounded-2xl px-4 py-3">
               <div
-                class="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0"
-              >
+                class="w-8 h-8 bg-indigo-600 rounded-xl flex items-center justify-center text-white text-xs font-bold shrink-0">
                 <!-- FIX: optional chaining para evitar crash si nombre es undefined -->
                 {{ emp.nombre?.charAt(0) ?? "?" }}
               </div>
@@ -664,10 +574,8 @@ onMounted(() => {
                   {{ formatHora(emp.ultima_salida) }}
                 </p>
               </div>
-              <span
-                class="text-[10px] font-bold text-slate-400 bg-slate-200 px-2 py-0.5 rounded-lg"
-                >{{ emp.total_fichajes }}</span
-              >
+              <span class="text-[10px] font-bold text-slate-400 bg-slate-200 px-2 py-0.5 rounded-lg">{{
+                emp.total_fichajes }}</span>
             </div>
           </div>
         </div>
@@ -675,47 +583,30 @@ onMounted(() => {
 
       <!-- Ranking + Sin fichar -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div
-          class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm"
-        >
+        <div class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm">
           <h3 class="font-bold text-slate-900 mb-1 flex items-center gap-2">
             <Trophy class="w-4 h-4 text-amber-400" /> Ranking horas esta semana
           </h3>
           <p class="text-slate-400 text-xs mb-4">
             Ordenado por horas trabajadas
           </p>
-          <div
-            v-if="loadingRanking"
-            class="text-center py-6 animate-pulse text-indigo-600 text-sm font-bold"
-          >
+          <div v-if="loadingRanking" class="text-center py-6 animate-pulse text-indigo-600 text-sm font-bold">
             Cargando...
           </div>
-          <div
-            v-else-if="ranking.length === 0"
-            class="text-center py-6 text-slate-300 text-sm"
-          >
+          <div v-else-if="ranking.length === 0" class="text-center py-6 text-slate-300 text-sm">
             Sin datos
           </div>
           <div v-else class="space-y-2 max-h-72 overflow-y-auto">
-            <div
-              v-for="(emp, idx) in ranking"
-              :key="emp.id"
-              class="flex items-center gap-3 rounded-2xl px-4 py-3 border"
-              :class="bgDiff(emp.diferencia)"
-            >
-              <span
-                class="text-xs font-black w-5 text-center"
-                :class="
-                  idx === 0
-                    ? 'text-amber-500'
-                    : idx === 1
-                      ? 'text-slate-400'
-                      : idx === 2
-                        ? 'text-orange-400'
-                        : 'text-slate-300'
-                "
-                >{{ idx + 1 }}</span
-              >
+            <div v-for="(emp, idx) in ranking" :key="emp.id"
+              class="flex items-center gap-3 rounded-2xl px-4 py-3 border" :class="bgDiff(emp.diferencia)">
+              <span class="text-xs font-black w-5 text-center" :class="idx === 0
+                  ? 'text-amber-500'
+                  : idx === 1
+                    ? 'text-slate-400'
+                    : idx === 2
+                      ? 'text-orange-400'
+                      : 'text-slate-300'
+                ">{{ idx + 1 }}</span>
               <div class="flex-1 min-w-0">
                 <p class="font-bold text-slate-800 text-sm truncate">
                   {{ emp.nombre }}
@@ -731,29 +622,21 @@ onMounted(() => {
                   {{ emp.diferencia > 0 ? "+" : "" }}{{ emp.diferencia }}h
                 </p>
               </div>
-              <component
-                :is="emp.diferencia >= 0 ? TrendingUp : TrendingDown"
-                class="w-4 h-4 shrink-0"
-                :class="colorDiff(emp.diferencia)"
-              />
+              <component :is="emp.diferencia >= 0 ? TrendingUp : TrendingDown" class="w-4 h-4 shrink-0"
+                :class="colorDiff(emp.diferencia)" />
             </div>
           </div>
         </div>
 
-        <div
-          class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm"
-        >
+        <div class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm">
           <div class="flex items-center justify-between mb-1">
             <h3 class="font-bold text-slate-900 flex items-center gap-2">
               <AlertTriangle class="w-4 h-4 text-amber-400" /> Sin fichar
             </h3>
             <div class="flex items-center gap-2">
               <span class="text-xs text-slate-400">Más de</span>
-              <select
-                v-model.number="diasSinFichar"
-                @change="fetchSinFichar"
-                class="border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold outline-none focus:border-indigo-400 cursor-pointer"
-              >
+              <select v-model.number="diasSinFichar" @change="fetchSinFichar"
+                class="border border-slate-200 rounded-lg px-2 py-1 text-xs font-bold outline-none focus:border-indigo-400 cursor-pointer">
                 <option :value="1">1 día</option>
                 <option :value="2">2 días</option>
                 <option :value="3">3 días</option>
@@ -765,27 +648,17 @@ onMounted(() => {
           <p class="text-slate-400 text-xs mb-4">
             Empleados activos sin actividad reciente
           </p>
-          <div
-            v-if="loadingSinFichar"
-            class="text-center py-6 animate-pulse text-indigo-600 text-sm font-bold"
-          >
+          <div v-if="loadingSinFichar" class="text-center py-6 animate-pulse text-indigo-600 text-sm font-bold">
             Cargando...
           </div>
-          <div
-            v-else-if="sinFichar.length === 0"
-            class="text-center py-6 text-emerald-500 text-sm font-bold"
-          >
+          <div v-else-if="sinFichar.length === 0" class="text-center py-6 text-emerald-500 text-sm font-bold">
             ✓ Todos han fichado recientemente
           </div>
           <div v-else class="space-y-2 max-h-72 overflow-y-auto">
-            <div
-              v-for="emp in sinFichar"
-              :key="emp.id"
-              class="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3"
-            >
+            <div v-for="emp in sinFichar" :key="emp.id"
+              class="flex items-center gap-3 bg-amber-50 border border-amber-100 rounded-2xl px-4 py-3">
               <div
-                class="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 text-xs font-bold shrink-0"
-              >
+                class="w-8 h-8 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 text-xs font-bold shrink-0">
                 <!-- FIX: optional chaining para evitar crash si nombre es undefined -->
                 {{ emp.nombre?.charAt(0) ?? "?" }}
               </div>
@@ -816,68 +689,45 @@ onMounted(() => {
       </div>
 
       <!-- Resumen semanal por empleado -->
-      <div
-        class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm"
-      >
+      <div class="bg-white rounded-3xl p-4 sm:p-6 border border-slate-100 shadow-sm">
         <h3 class="font-bold text-slate-900 mb-1">
           Resumen semanal por empleado
         </h3>
         <p class="text-slate-400 text-xs mb-5">
           Horas trabajadas vs esperadas esta semana
         </p>
-        <div
-          v-if="loadingResumen"
-          class="text-center py-8 animate-pulse text-indigo-600 font-bold"
-        >
+        <div v-if="loadingResumen" class="text-center py-8 animate-pulse text-indigo-600 font-bold">
           Cargando...
         </div>
-        <div
-          v-else-if="resumenSemanal.length === 0"
-          class="text-center py-8 text-slate-300 text-sm"
-        >
+        <div v-else-if="resumenSemanal.length === 0" class="text-center py-8 text-slate-300 text-sm">
           Sin datos
         </div>
-        <div
-          v-else
-          class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
-        >
-          <div
-            v-for="emp in resumenSemanal"
-            :key="emp.nombre"
-            class="border rounded-2xl p-4"
-            :class="bgDiff(emp.diferencia_total)"
-          >
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div v-for="emp in resumenSemanal" :key="emp.nombre" class="border rounded-2xl p-4"
+            :class="bgDiff(emp.diferencia_total)">
             <div class="flex items-center justify-between mb-3">
               <div>
                 <p class="font-bold text-slate-800 text-sm">{{ emp.nombre }}</p>
                 <p class="text-slate-400 text-xs">{{ emp.cargo }}</p>
               </div>
-              <span
-                class="text-sm font-black"
-                :class="colorDiff(emp.diferencia_total)"
-              >
+              <span class="text-sm font-black" :class="colorDiff(emp.diferencia_total)">
                 {{ emp.diferencia_total > 0 ? "+" : ""
                 }}{{ emp.diferencia_total }}h
               </span>
             </div>
             <div class="h-2 bg-white/70 rounded-full overflow-hidden mb-2">
-              <div
-                class="h-full rounded-full transition-all"
-                :class="
-                  emp.diferencia_total >= 0
-                    ? 'bg-emerald-500'
-                    : emp.diferencia_total >= -2
-                      ? 'bg-amber-400'
-                      : 'bg-rose-400'
-                "
-                :style="{
+              <div class="h-full rounded-full transition-all" :class="emp.diferencia_total >= 0
+                  ? 'bg-emerald-500'
+                  : emp.diferencia_total >= -2
+                    ? 'bg-amber-400'
+                    : 'bg-rose-400'
+                " :style="{
                   width:
                     Math.min(
                       (emp.total_trabajadas / emp.total_esperadas) * 100,
                       100,
                     ) + '%',
-                }"
-              ></div>
+                }"></div>
             </div>
             <div class="flex justify-between text-xs text-slate-500">
               <span>{{ emp.total_trabajadas }}h trabajadas</span>
@@ -889,27 +739,15 @@ onMounted(() => {
     </div>
 
     <!-- Formulario nuevo/editar empleado -->
-    <EmployeeForm
-      v-if="mostrarFormulario"
-      :formData="formData"
-      :erroresCampo="erroresCampo"
-      :tocados="tocados"
-      :modoEdicion="modoEdicion"
-      :claseCampo="claseCampo"
-      :marcarTocado="marcarTocado"
-      @guardar="guardarEmpleado"
-      @cancelar="cerrarFormulario"
-    />
+    <EmployeeForm v-if="mostrarFormulario" :formData="formData" :erroresCampo="erroresCampo" :tocados="tocados"
+      :modoEdicion="modoEdicion" :claseCampo="claseCampo" :marcarTocado="marcarTocado" @guardar="guardarEmpleado"
+      @cancelar="cerrarFormulario" />
 
     <!-- Modal credenciales nuevas -->
-    <div
-      v-if="credencialesNuevas"
-      class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-    >
+    <div v-if="credencialesNuevas"
+      class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm shadow-2xl">
-        <div
-          class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4"
-        >
+        <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mb-4">
           <span class="text-emerald-600 text-xl font-bold">✓</span>
         </div>
         <h2 class="text-xl font-bold text-slate-900 mb-1">Empleado creado</h2>
@@ -917,27 +755,21 @@ onMounted(() => {
           Comparte estas credenciales con el empleado
         </p>
         <div class="space-y-3 text-sm">
-          <div
-            class="bg-slate-50 rounded-2xl px-4 py-3 flex justify-between items-center gap-2"
-          >
+          <div class="bg-slate-50 rounded-2xl px-4 py-3 flex justify-between items-center gap-2">
             <span class="text-slate-400 font-medium shrink-0">Email</span>
             <span class="text-slate-700 font-bold truncate">{{
               credencialesNuevas.email
-            }}</span>
+              }}</span>
           </div>
-          <div
-            class="bg-slate-50 rounded-2xl px-4 py-3 flex justify-between items-center gap-2"
-          >
+          <div class="bg-slate-50 rounded-2xl px-4 py-3 flex justify-between items-center gap-2">
             <span class="text-slate-400 font-medium shrink-0">Contraseña</span>
             <span class="text-slate-700 font-bold">{{
               credencialesNuevas.password
-            }}</span>
+              }}</span>
           </div>
         </div>
-        <button
-          @click="credencialesNuevas = null"
-          class="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-colors cursor-pointer"
-        >
+        <button @click="credencialesNuevas = null"
+          class="mt-6 w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-colors cursor-pointer">
           Entendido
         </button>
       </div>
