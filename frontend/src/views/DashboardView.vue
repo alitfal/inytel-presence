@@ -244,11 +244,11 @@ async function refrescarTodo() {
 
 // ── Charts ────────────────────────────────────
 const chartPorHoras = computed(() => ({
-  labels: stats.value?.por_horas.map((h) => `${h.hora}:00`) || [],
+  labels: stats.value?.por_horas?.map((h) => `${h.hora}:00`) || [],
   datasets: [
     {
       label: "Fichajes",
-      data: stats.value?.por_horas.map((h) => h.total) || [],
+      data: stats.value?.por_horas?.map((h) => h.total) || [],
       backgroundColor: "rgba(99,102,241,0.15)",
       borderColor: "rgba(99,102,241,1)",
       borderWidth: 2,
@@ -261,7 +261,7 @@ const chartPorHoras = computed(() => ({
 
 const chartPorDias = computed(() => ({
   labels:
-    stats.value?.por_dias.map((d) =>
+    stats.value?.por_dias?.map((d) =>
       new Date(d.dia).toLocaleDateString("es-ES", {
         weekday: "short",
         day: "2-digit",
@@ -271,7 +271,7 @@ const chartPorDias = computed(() => ({
   datasets: [
     {
       label: "Fichajes",
-      data: stats.value?.por_dias.map((d) => d.total) || [],
+      data: stats.value?.por_dias?.map((d) => d.total) || [],
       backgroundColor: "rgba(16,185,129,0.7)",
       borderRadius: 8,
       borderSkipped: false,
@@ -509,7 +509,7 @@ onMounted(() => {
             </p>
             <div class="h-48">
               <Bar
-                v-if="stats?.por_horas.length"
+                v-if="stats?.por_horas?.length"
                 :data="chartPorHoras"
                 :options="chartOptions"
               />
@@ -535,7 +535,7 @@ onMounted(() => {
             </p>
             <div class="h-48">
               <Bar
-                v-if="stats?.por_dias.length"
+                v-if="stats?.por_dias?.length"
                 :data="chartPorDias"
                 :options="chartOptions"
               />
