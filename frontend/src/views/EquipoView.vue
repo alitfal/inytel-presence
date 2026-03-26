@@ -1,4 +1,21 @@
 <script setup>
+/**
+ * @component EquipoView
+ * @description Vista principal de gestión del equipo para administradores.
+ *              Muestra el listado de empleados en dos modos (grid / lista)
+ *              con filtrado por nombre o cargo, refresco automático cada 60s
+ *              y acciones sobre cada empleado.
+ *
+ * Funcionalidades:
+ * - Alternar entre vista grid (tarjetas) y vista lista (compacta).
+ * - Filtrar empleados por nombre o cargo mediante el buscador del navbar.
+ * - Abrir el modal de ficha completa de un empleado (EmployeeModal).
+ * - Crear y editar empleados mediante EmployeeForm.
+ * - Eliminar empleados con confirmación.
+ * - Resetear contraseña de un empleado desde el menú contextual de la lista.
+ * - Activar/desactivar el acceso de un empleado.
+ * - Mostrar las credenciales del empleado recién creado.
+ */
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import AdminLayout from "../components/AdminLayout.vue";
 import EmployeeCard from "../components/EmployeeCard.vue";
@@ -11,27 +28,75 @@ import { useEmployeeForm } from "../composables/useEmployeeForm";
 import axios from "axios";
 
 const API = "/api";
-const searchQuery = ref("");
-const empleadoSeleccionado = ref(null);
-const vistaGrid = ref(true);
-const mostrarCambiarPassword = ref(false);
-const credencialesNuevas = ref(null);
 
-const menuAbierto = ref(null);
-const menuBtn = ref(null);
-const mostrandoResetId = ref(null);
-const passwordReset = ref("");
-const passwordResetConfirm = ref("");
-const errorReset = ref("");
-const exitoReset = ref(false);
-const loadingReset = ref(false);
-const loadingActivo = ref(false);
+// ── Estado de la vista ────────────────────────────────────────────────────────
+const searchQuery = ref(""); // Texto del buscador sincronizado con AdminLayout
+const empleadoSeleccionado = ref(null); // Empleado cuya ficha está abierta en el modal
+const vistaGrid = ref(true); // true = grid, false = lista compacta
+const mostrarCambiarPassword = ref(false); // Controla la visibilidad del modal de cambio de contraseña
+const credencialesNuevas = ref(null); // Credenciales del empleado recién creado para mostrar al admin
 
+// ── Estado del menú contextual (vista lista) ──────────────────────────────────
+const menuAbierto = ref(null); // ID del empleado con el menú desplegado (o null)
+const menuBtn = ref(null); // Referencia al botón que abrió el menú (no usado actualmente)
+const mostrandoResetId = ref(null); // ID del empleado con el formulario de reset visible
+const passwordReset = ref(""); // Nueva contraseña introducida en el reset
+const passwordResetConfirm = ref(""); // Confirmación de la nueva contraseña
+const errorReset = ref(""); // Mensaje de error del reset de contraseña
+const exitoReset = ref(false); // true cuando el reset se ha completado con éxito
+const loadingReset = ref(false); // true mientras se envía la solicitud de reset
+const loadingActivo = ref(false); // true mientras se procesa el cambio de estado activo/inactivo
+
+// ── Estado del refresco automático ───────────────────────────────────────────
 const loadingRefresh = ref(false);
-const ultimaActualizacion = ref(null);
-const flashVerde = ref(false);
-let refreshInterval = null;
+const ultimaActualizacion = ref(null); // Hora de la última actualización formateada
+const flashVerde = ref(false); // Activa el flash verde en el indicador de actualización
+let refreshInterval = null; // Referencia al intervalo para limpiarlo al desmontar
 
+// ── Composables ───────────────────────────────────────────────────────────────
+const {
+  employees,
+  loading,
+  fetchEmployees,
+  crearEmpleado,
+  editarEmpleado,
+  eliminarEmpleado,
+} = useEmployees();
+
+const {
+  mostrarFormulario,
+  modoEdicion,
+  formData,
+  erroresCampo,
+  tocados,
+  validarFormulario,
+  abrirNuevo,
+  abrirEditar,
+  cerrarFormulario,
+  claseCampo,
+  marcarTocado,
+} = useEmployeeForm();
+
+// ── Computed ──────────────────────────────────────────────────────────────────
+
+/**
+ * Lista de empleados filtrada por el texto del buscador.
+ * Compara contra nombre y cargo (insensible a mayúsculas).
+ */
+const filteredEmployees = computed(() =>
+  employees.value.filter(
+    (p) =>
+      p.nombre.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      p.cargo.toLowerCase().includes(searchQuery.value.toLowerCase()),
+  ),
+);
+
+// ── Acciones de refresco ──────────────────────────────────────────────────────
+
+/**
+ * Recarga la lista de empleados y actualiza el indicador de última actualización.
+ * Activa el flash verde durante 1.5s para dar feedback visual al usuario.
+ */
 async function refrescar() {
   loadingRefresh.value = true;
   await fetchEmployees();
@@ -46,6 +111,14 @@ async function refrescar() {
   }, 1500);
 }
 
+// ── Acciones del menú contextual (vista lista) ────────────────────────────────
+
+/**
+ * Alterna la visibilidad del menú contextual de un empleado en la vista lista.
+ * Al abrir un menú nuevo, resetea el estado del formulario de reset.
+ *
+ * @param {number} id - ID del empleado.
+ */
 function toggleMenuLista(id) {
   menuAbierto.value = menuAbierto.value === id ? null : id;
   mostrandoResetId.value = null;
@@ -55,6 +128,13 @@ function toggleMenuLista(id) {
   exitoReset.value = false;
 }
 
+/**
+ * Envía la nueva contraseña para el empleado desde el menú contextual de la lista.
+ * Valida longitud mínima y coincidencia antes de llamar a la API.
+ * Cierra el menú automáticamente tras el éxito.
+ *
+ * @param {Object} employee - Empleado al que resetear la contraseña.
+ */
 async function resetPasswordLista(employee) {
   errorReset.value = "";
   if (!passwordReset.value || passwordReset.value.length < 6) {
@@ -71,6 +151,7 @@ async function resetPasswordLista(employee) {
       password_nueva: passwordReset.value,
     });
     exitoReset.value = true;
+    // Cerrar el menú automáticamente tras 1.5s
     setTimeout(() => {
       menuAbierto.value = null;
       mostrandoResetId.value = null;
@@ -85,6 +166,11 @@ async function resetPasswordLista(employee) {
   }
 }
 
+/**
+ * Activa o desactiva el acceso de un empleado y recarga la lista.
+ *
+ * @param {Object} employee - Empleado a activar/desactivar.
+ */
 async function toggleActivoLista(employee) {
   try {
     loadingActivo.value = true;
@@ -100,58 +186,52 @@ async function toggleActivoLista(employee) {
   }
 }
 
-const {
-  employees,
-  loading,
-  fetchEmployees,
-  crearEmpleado,
-  editarEmpleado,
-  eliminarEmpleado,
-} = useEmployees();
-const {
-  mostrarFormulario,
-  modoEdicion,
-  formData,
-  erroresCampo,
-  tocados,
-  validarFormulario,
-  abrirNuevo,
-  abrirEditar,
-  cerrarFormulario,
-  claseCampo,
-  marcarTocado,
-} = useEmployeeForm();
+// ── Acciones del modal de ficha ───────────────────────────────────────────────
 
-const filteredEmployees = computed(() =>
-  employees.value.filter(
-    (p) =>
-      p.nombre.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-      p.cargo.toLowerCase().includes(searchQuery.value.toLowerCase()),
-  ),
-);
-
+/** Abre el modal de ficha completa del empleado seleccionado. */
 function abrirFicha(employee) {
   empleadoSeleccionado.value = employee;
 }
+
+/** Cierra el modal de ficha. */
 function cerrarFicha() {
   empleadoSeleccionado.value = null;
 }
+
+/**
+ * Cierra el modal de ficha y abre el formulario de edición del empleado.
+ *
+ * @param {Object} employee - Empleado a editar.
+ */
 function handleEditar(employee) {
   cerrarFicha();
   abrirEditar(employee);
 }
 
+/**
+ * Actualiza el estado del empleado seleccionado localmente tras un fichaje
+ * sin necesidad de recargar desde la API.
+ *
+ * @param {'ENTRADA'|'SALIDA'} tipo - Tipo de fichaje realizado.
+ */
 async function handleFichar(tipo) {
   empleadoSeleccionado.value = {
     ...empleadoSeleccionado.value,
     estado: tipo === "ENTRADA" ? "DENTRO" : "FUERA",
   };
+  // Sincronizar también el estado en la lista de empleados
   const emp = employees.value.find(
     (e) => e.id === empleadoSeleccionado.value.id,
   );
   if (emp) emp.estado = empleadoSeleccionado.value.estado;
 }
 
+/**
+ * Solicita confirmación y elimina el empleado.
+ * Cierra el modal de ficha si estaba abierto.
+ *
+ * @param {Object} employee - Empleado a eliminar.
+ */
 async function handleEliminar(employee) {
   if (
     !confirm(
@@ -163,6 +243,10 @@ async function handleEliminar(employee) {
   cerrarFicha();
 }
 
+/**
+ * Guarda el empleado (crear o editar) tras validar el formulario.
+ * Si es creación, guarda las credenciales para mostrarlas al admin.
+ */
 async function guardarEmpleado() {
   if (!validarFormulario()) return;
   if (modoEdicion.value) {
@@ -177,11 +261,14 @@ async function guardarEmpleado() {
   }
 }
 
+// ── Ciclo de vida ─────────────────────────────────────────────────────────────
 onMounted(async () => {
   await refrescar();
+  // Refresco automático cada 60 segundos para mantener los estados actualizados
   refreshInterval = setInterval(refrescar, 60_000);
 });
-onUnmounted(() => clearInterval(refreshInterval));
+
+onUnmounted(() => clearInterval(refreshInterval)); // evitar memory leak
 </script>
 
 <template>
@@ -191,9 +278,10 @@ onUnmounted(() => clearInterval(refreshInterval));
     @cambiar-password="mostrarCambiarPassword = true"
   >
     <div class="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full">
-      <!-- Cabecera -->
+      <!-- Cabecera: toggle de vista, título y botón de refresco -->
       <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div class="flex items-center gap-3">
+          <!-- Botón para alternar entre vista grid y lista -->
           <button
             @click="vistaGrid = !vistaGrid"
             class="w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-all text-base sm:text-lg cursor-pointer"
@@ -207,7 +295,7 @@ onUnmounted(() => clearInterval(refreshInterval));
           </h2>
         </div>
 
-        <!-- Refresh -->
+        <!-- Indicador de última actualización y botón de refresco manual -->
         <div class="flex items-center gap-2">
           <span
             v-if="ultimaActualizacion"
@@ -231,6 +319,7 @@ onUnmounted(() => clearInterval(refreshInterval));
         </div>
       </div>
 
+      <!-- Estado de carga inicial -->
       <div
         v-if="loading && !ultimaActualizacion"
         class="flex justify-center py-20 animate-pulse text-indigo-600 font-bold"
@@ -239,7 +328,7 @@ onUnmounted(() => clearInterval(refreshInterval));
       </div>
 
       <template v-else>
-        <!-- Vista grid: 2 cols móvil, 2 tablet, 3 lg, 4 xl -->
+        <!-- ── Vista grid: tarjetas de empleado ── -->
         <div
           v-if="vistaGrid"
           class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6"
@@ -253,7 +342,7 @@ onUnmounted(() => clearInterval(refreshInterval));
           />
         </div>
 
-        <!-- Vista listado — compacta -->
+        <!-- ── Vista lista: filas compactas con menú contextual ── -->
         <div v-else class="flex flex-col gap-2" style="overflow: visible">
           <div
             v-for="person in filteredEmployees"
@@ -261,7 +350,7 @@ onUnmounted(() => clearInterval(refreshInterval));
             class="bg-white border border-slate-100 rounded-2xl px-3 sm:px-5 py-3 flex items-center gap-3 shadow-sm hover:shadow-md transition-all"
             style="overflow: visible"
           >
-            <!-- Avatar -->
+            <!-- Avatar — abre la ficha al hacer clic -->
             <div
               @click="abrirFicha(person)"
               class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold shrink-0 cursor-pointer text-sm"
@@ -270,7 +359,7 @@ onUnmounted(() => clearInterval(refreshInterval));
               {{ person.nombre.charAt(0) }}
             </div>
 
-            <!-- Nombre + cargo -->
+            <!-- Nombre y cargo — abre la ficha al hacer clic -->
             <div
               @click="abrirFicha(person)"
               class="flex-1 min-w-0 cursor-pointer"
@@ -287,7 +376,7 @@ onUnmounted(() => clearInterval(refreshInterval));
               </p>
             </div>
 
-            <!-- Estado -->
+            <!-- Badge de estado: DENTRO / FUERA -->
             <span
               :class="[
                 person.estado === 'DENTRO'
@@ -300,7 +389,7 @@ onUnmounted(() => clearInterval(refreshInterval));
               {{ person.estado === "DENTRO" ? "● Dentro" : "○ Fuera" }}
             </span>
 
-            <!-- Menú -->
+            <!-- Menú contextual: resetear contraseña y activar/desactivar -->
             <div class="relative shrink-0">
               <button
                 @click.stop="toggleMenuLista(person.id)"
@@ -308,10 +397,13 @@ onUnmounted(() => clearInterval(refreshInterval));
               >
                 <MoreHorizontal class="w-4 h-4" />
               </button>
+
+              <!-- Desplegable del menú -->
               <div
                 v-if="menuAbierto === person.id"
                 class="absolute right-0 top-8 bg-white border border-slate-100 rounded-2xl shadow-xl z-50 w-52 p-2"
               >
+                <!-- Opciones principales del menú -->
                 <div v-if="mostrandoResetId !== person.id">
                   <button
                     @click="mostrandoResetId = person.id"
@@ -319,6 +411,7 @@ onUnmounted(() => clearInterval(refreshInterval));
                   >
                     <KeyRound class="w-4 h-4" /> Resetear contraseña
                   </button>
+                  <!-- Color dinámico: rojo si activo, verde si inactivo -->
                   <button
                     @click="toggleActivoLista(person)"
                     :disabled="loadingActivo"
@@ -341,6 +434,8 @@ onUnmounted(() => clearInterval(refreshInterval));
                     Cancelar
                   </button>
                 </div>
+
+                <!-- Formulario inline de reset de contraseña -->
                 <div v-else class="px-1 py-1">
                   <p class="text-xs font-bold text-slate-500 mb-2 px-2">
                     Nueva contraseña
@@ -384,6 +479,8 @@ onUnmounted(() => clearInterval(refreshInterval));
                   </div>
                 </div>
               </div>
+
+              <!-- Overlay invisible para cerrar el menú al clicar fuera -->
               <div
                 v-if="menuAbierto === person.id"
                 class="fixed inset-0 z-0"
@@ -395,7 +492,9 @@ onUnmounted(() => clearInterval(refreshInterval));
       </template>
     </div>
 
-    <!-- Modales -->
+    <!-- ── Modales ── -->
+
+    <!-- Ficha completa del empleado -->
     <EmployeeModal
       v-if="empleadoSeleccionado"
       :employee="empleadoSeleccionado"
@@ -404,6 +503,8 @@ onUnmounted(() => clearInterval(refreshInterval));
       @eliminar="handleEliminar"
       @fichar="handleFichar"
     />
+
+    <!-- Formulario de creación / edición -->
     <EmployeeForm
       v-if="mostrarFormulario"
       :formData="formData"
@@ -415,12 +516,14 @@ onUnmounted(() => clearInterval(refreshInterval));
       @guardar="guardarEmpleado"
       @cancelar="cerrarFormulario"
     />
+
+    <!-- Modal de cambio de contraseña del admin -->
     <CambiarPasswordModal
       v-if="mostrarCambiarPassword"
       @cerrar="mostrarCambiarPassword = false"
     />
 
-    <!-- Modal credenciales nuevas -->
+    <!-- Modal de credenciales del empleado recién creado -->
     <div
       v-if="credencialesNuevas"
       class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
