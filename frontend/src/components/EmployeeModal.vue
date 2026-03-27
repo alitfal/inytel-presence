@@ -217,7 +217,7 @@ onMounted(() => {
         </div>
 <div class="flex items-center gap-2">
   <button @click="emit('editar', employee)"
-    class="text-slate-400 hover:text-indigo-600 transition-colors text-sm font-bold cursor-pointer">
+    class="py-1.5 px-3 bg-green-100 hover:bg-green-200 text-green-700 font-bold rounded-xl transition-colors text-sm cursor-pointer">
     Editar
   </button>
   <button @click="emit('eliminar', employee)"
