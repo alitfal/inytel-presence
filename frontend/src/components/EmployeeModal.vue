@@ -215,12 +215,20 @@ onMounted(() => {
             {{ employee.cargo }}
           </p>
         </div>
-        <button
-          @click="emit('editar', employee)"
-          class="text-slate-400 hover:text-indigo-600 transition-colors text-sm font-bold cursor-pointer"
-        >
-          Editar
-        </button>
+<div class="flex items-center gap-2">
+  <button @click="emit('editar', employee)"
+    class="text-slate-400 hover:text-indigo-600 transition-colors text-sm font-bold cursor-pointer">
+    Editar
+  </button>
+  <button @click="emit('eliminar', employee)"
+    class="py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-500 font-bold rounded-xl transition-colors text-sm cursor-pointer">
+    Eliminar
+  </button>
+  <button @click="emit('cerrar')"
+    class="py-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors text-sm cursor-pointer">
+    Cerrar
+  </button>
+</div>
       </div>
 
       <!-- ── Cuerpo: dos columnas en md+, una columna en móvil ── -->
@@ -597,22 +605,6 @@ onMounted(() => {
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- ── Acciones: eliminar y cerrar ── -->
-      <div class="flex gap-3 px-8 pb-8 pt-4 border-t border-slate-100">
-        <button
-          @click="emit('eliminar', employee)"
-          class="py-3 px-4 bg-rose-50 hover:bg-rose-100 text-rose-500 font-bold rounded-2xl transition-colors text-sm cursor-pointer"
-        >
-          Eliminar
-        </button>
-        <button
-          @click="emit('cerrar')"
-          class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl transition-colors cursor-pointer"
-        >
-          Cerrar
-        </button>
       </div>
     </div>
   </div>

@@ -404,10 +404,7 @@ onMounted(async () => {
           </div>
 
           <!-- Columna derecha: historial de fichajes con navegación temporal -->
-          <div
-            class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm overflow-hidden"
-            style="height: 655px"
-          >
+          <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm" style="height: 655px">
             <h3 class="font-bold text-slate-900 mb-4">Historial de fichajes</h3>
 
             <!-- Selector de periodo: Hoy / Semana / Mes -->
@@ -469,11 +466,7 @@ onMounted(async () => {
             </div>
 
             <!-- Lista de jornadas con scroll interno -->
-            <div
-              v-else
-              class="space-y-2 overflow-y-auto pr-1"
-              style="max-height: calc(655px - 130px)"
-            >
+            <div v-else class="space-y-2 overflow-y-auto pr-1" style="max-height: 465px">
               <div
                 v-for="j in historial"
                 :key="j.id"
