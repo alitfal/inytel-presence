@@ -48,6 +48,7 @@ const motivoOpciones = [
 
 /**
  * Formatea la hora de entrada a HH:mm para mostrarla en el mensaje.
+ * FIX: se usa este computed en el template en lugar de horaEntrada directamente.
  * @returns {string} Hora formateada o "--:--" si no está disponible
  */
 const horaEntradaFormateada = computed(
@@ -56,16 +57,20 @@ const horaEntradaFormateada = computed(
 
 /**
  * Formatea la fecha de entrada a texto legible en español.
- * Se añade T12:00:00 para evitar desfases por zona horaria.
+ * Se añade T12:00:00 para evitar desfases por zona horaria que causaban "Invalid date".
  * @returns {string} Ejemplo: "lunes, 10 de marzo"
  */
-const diaFormateado = computed(() =>
-  new Date(props.fechaEntrada + "T12:00:00").toLocaleDateString("es-ES", {
+const diaFormateado = computed(() => {
+  if (!props.fechaEntrada) return "";
+  const fecha = props.fechaEntrada instanceof Date
+    ? props.fechaEntrada.toISOString().slice(0, 10)
+    : String(props.fechaEntrada).slice(0, 10);
+  return new Date(fecha + "T12:00:00").toLocaleDateString("es-ES", {
     weekday: "long",
     day: "2-digit",
     month: "long",
-  }),
-);
+  });
+});
 
 /**
  * Valida el formulario y envía la incidencia a la API.
@@ -109,25 +114,23 @@ async function resolver() {
 
 <template>
   <!-- Overlay bloqueante — no se puede cerrar haciendo clic fuera -->
-  <div
-    class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-  >
-    <div class="bg-white rounded-3xl p-8 w-full max-w-sm shadow-2xl">
+  <div class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <!-- FIX móvil: overflow-y-auto + max-h para que no se desborde en pantallas pequeñas -->
+    <div class="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm shadow-2xl overflow-y-auto max-h-[90vh]">
+
       <!-- Icono de alerta -->
-      <div
-        class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mb-4"
-      >
+      <div class="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mb-4">
         <AlertTriangle class="w-6 h-6 text-amber-500" />
       </div>
 
       <h2 class="text-xl font-bold text-slate-900 mb-1">Fichaje incompleto</h2>
       <p class="text-slate-400 text-sm mb-6">
         El
-        <span class="font-semibold text-slate-600 capitalize">{{
-          diaFormateado
-        }}</span>
+        <!-- FIX invalid date: usar diaFormateado en lugar de fechaEntrada directamente -->
+        <span class="font-semibold text-slate-600 capitalize">{{ diaFormateado }}</span>
         fichaste la entrada a las
-        <span class="font-semibold text-slate-600">{{ horaEntrada }}</span>
+        <!-- FIX invalid date: usar horaEntradaFormateada en lugar de horaEntrada directamente -->
+        <span class="font-semibold text-slate-600">{{ horaEntradaFormateada }}</span>
         pero no registraste la salida. Indícanos qué ocurrió.
       </p>
 
@@ -140,18 +143,11 @@ async function resolver() {
               v-for="op in motivoOpciones"
               :key="op.value"
               class="flex items-center gap-3 border rounded-xl px-4 py-2.5 cursor-pointer transition-all"
-              :class="
-                motivo === op.value
-                  ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
-                  : 'border-slate-200 hover:border-slate-300 text-slate-600'
-              "
+              :class="motivo === op.value
+                ? 'border-indigo-400 bg-indigo-50 text-indigo-700'
+                : 'border-slate-200 hover:border-slate-300 text-slate-600'"
             >
-              <input
-                type="radio"
-                v-model="motivo"
-                :value="op.value"
-                class="accent-indigo-600"
-              />
+              <input type="radio" v-model="motivo" :value="op.value" class="accent-indigo-600" />
               {{ op.label }}
             </label>
           </div>
@@ -182,9 +178,7 @@ async function resolver() {
           />
         </div>
 
-        <p v-if="error" class="text-rose-500 text-xs font-medium">
-          {{ error }}
-        </p>
+        <p v-if="error" class="text-rose-500 text-xs font-medium">{{ error }}</p>
       </div>
 
       <button

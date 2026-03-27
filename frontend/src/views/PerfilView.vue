@@ -592,7 +592,7 @@ onMounted(async () => {
       :fichaje-id="incidenciaPendiente.fichaje_id"
       :fecha-entrada="incidenciaPendiente.fecha_entrada"
       :hora-entrada="incidenciaPendiente.hora_entrada"
-      @resuelta="incidenciaPendiente = null"
+      @resuelta="incidenciaPendiente = null; fetchEmpleado(); fetchHistorial(empleado.id, periodoActivo)"
     />
   </div>
 </template>
