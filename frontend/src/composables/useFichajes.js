@@ -271,14 +271,19 @@ export function useFichajes() {
    * @param {string|Date} fechaHora - Fecha y hora a formatear.
    * @returns {string} Ejemplo: "10/05/2026, 08:30".
    */
-  function formatFechaHora(fechaHora) {
-    if (!fechaHora) return "";
-    return new Date(fechaHora).toLocaleString("es-ES", {
+  function formatFecha(fecha) {
+    if (!fecha) return "";
+    // Extraer siempre el string YYYY-MM-DD directamente, sin pasar por toISOString()
+    // para evitar desfases UTC cuando mysql2 devuelve objetos Date.
+    const str =
+      fecha instanceof Date
+        ? `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`
+        : String(fecha).slice(0, 10);
+    return new Date(str + "T12:00:00").toLocaleDateString("es-ES", {
+      weekday: "short",
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   }
 
