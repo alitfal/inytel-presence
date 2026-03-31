@@ -6,6 +6,30 @@ const db = require("../config/db");
 const { authMiddleware, soloAdmin } = require("../middlewares/auth");
 
 /**
+ * Devuelve la fecha y hora actuales en la zona horaria local del servidor.
+ *
+ * Se usa `getTimezoneOffset()` para calcular el desplazamiento respecto a UTC
+ * y se aplica sobre el timestamp Unix, de forma que `toISOString()` produzca
+ * la representación local en lugar de UTC.
+ *
+ * Con `TZ=Europe/Madrid` configurado en Railway, este helper devuelve siempre
+ * la hora de España (UTC+1 en invierno, UTC+2 en verano — DST automático).
+ *
+ * @returns {{ fecha: string, hora: string }}
+ *   - fecha: "YYYY-MM-DD" en hora local
+ *   - hora:  "HH:MM:SS"   en hora local
+ */
+function ahoraLocal() {
+  const ahora = new Date();
+  const offset = ahora.getTimezoneOffset(); // minutos de diferencia respecto a UTC
+  const local = new Date(ahora.getTime() - offset * 60000);
+  return {
+    fecha: local.toISOString().slice(0, 10),
+    hora: local.toISOString().slice(11, 19),
+  };
+}
+
+/**
  * POST /api/fichajes/entrada
  * Registra la entrada de un empleado.
  * Valida que el empleado esté activo, que sea un día laborable
@@ -24,7 +48,9 @@ router.post("/entrada", authMiddleware, async (req, res) => {
         error: "Tu cuenta está desactivada. Contacta con tu administrador.",
       });
 
-    // Validar día laborable según configuración del empleado
+    // Validar día laborable según configuración del empleado.
+    // Se usa new Date() directamente para obtener el día de la semana —
+    // con TZ=Europe/Madrid, getDay() devuelve el día correcto en hora española.
     const hoy = new Date();
     const diaSemana = hoy.getDay() === 0 ? 7 : hoy.getDay();
     const diasPermitidos = (empleado.dias_laborables || "1,2,3,4,5")
@@ -46,7 +72,10 @@ router.post("/entrada", authMiddleware, async (req, res) => {
       });
     }
 
-    // Evitar doble entrada en el mismo día
+    // Evitar doble entrada en el mismo día.
+    // CURDATE() en MySQL usa la TZ del servidor MySQL (UTC por defecto en Railway).
+    // La comparación es segura porque fecha_entrada se almacena con ahoraLocal(),
+    // que ya devuelve la fecha en hora española.
     const [abierta] = await db.execute(
       "SELECT id FROM fichajes WHERE empleado_id = ? AND fecha_entrada = CURDATE() AND hora_salida IS NULL",
       [empleado_id],
@@ -56,8 +85,8 @@ router.post("/entrada", authMiddleware, async (req, res) => {
         .status(400)
         .json({ error: "Ya tienes una entrada registrada hoy sin salida." });
 
-    const fecha = hoy.toISOString().slice(0, 10);
-    const hora = hoy.toTimeString().slice(0, 8);
+    // Obtener fecha y hora locales (hora española) para el registro.
+    const { fecha, hora } = ahoraLocal();
     await db.execute(
       "INSERT INTO fichajes (empleado_id, fecha_entrada, hora_entrada) VALUES (?, ?, ?)",
       [empleado_id, fecha, hora],
@@ -88,9 +117,8 @@ router.post("/salida", authMiddleware, async (req, res) => {
         .status(400)
         .json({ error: "No tienes ninguna entrada registrada sin salida." });
 
-    const hoy = new Date();
-    const fecha = hoy.toISOString().slice(0, 10);
-    const hora = hoy.toTimeString().slice(0, 8);
+    // Obtener fecha y hora locales (hora española) para el registro.
+    const { fecha, hora } = ahoraLocal();
     await db.execute(
       "UPDATE fichajes SET fecha_salida = ?, hora_salida = ? WHERE id = ?",
       [fecha, hora, rows[0].id],
@@ -138,6 +166,12 @@ router.get("/pendiente/:empleado_id", authMiddleware, async (req, res) => {
  * Acepta los parámetros:
  * - periodo: "hoy" | "semana" | "mes"
  * - fecha: fecha base para la navegación temporal (YYYY-MM-DD)
+ *
+ * Nota sobre el parseo de fechas:
+ * Las cadenas YYYY-MM-DD recibidas como parámetro se parsean añadiendo
+ * "T12:00:00" para forzar mediodía local. Sin esto, new Date("2025-03-31")
+ * se interpreta como UTC medianoche, lo que con TZ=Europe/Madrid puede
+ * desplazar el resultado al día anterior.
  */
 router.get("/:empleado_id", authMiddleware, async (req, res) => {
   try {
@@ -146,21 +180,27 @@ router.get("/:empleado_id", authMiddleware, async (req, res) => {
     let condicion;
 
     if (periodo === "hoy") {
-      const dia = fecha || new Date().toISOString().slice(0, 10);
+      // Si no se recibe fecha explícita, calcular el día actual en hora local.
+      const { fecha: hoyLocal } = ahoraLocal();
+      const dia = fecha || hoyLocal;
       condicion = `fecha_entrada = '${dia}'`;
+
     } else if (periodo === "mes") {
-      const base = fecha ? new Date(fecha) : new Date();
+      // Parsear a mediodía local para evitar desfases al cruzar medianoche UTC.
+      const base = fecha ? new Date(fecha + "T12:00:00") : new Date();
       const inicio = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-01`;
       const fin = new Date(base.getFullYear(), base.getMonth() + 1, 0)
         .toISOString()
         .slice(0, 10);
       condicion = `fecha_entrada BETWEEN '${inicio}' AND '${fin}'`;
+
     } else {
-      // Por defecto semana
-      const base = fecha ? new Date(fecha) : new Date();
-      const dia = base.getDay() || 7;
+      // Por defecto: semana.
+      // Parsear a mediodía local para evitar desfases al cruzar medianoche UTC.
+      const base = fecha ? new Date(fecha + "T12:00:00") : new Date();
+      const diaSemana = base.getDay() || 7; // 1=lunes … 7=domingo
       const lunes = new Date(base);
-      lunes.setDate(base.getDate() - dia + 1);
+      lunes.setDate(base.getDate() - diaSemana + 1);
       const domingo = new Date(lunes);
       domingo.setDate(lunes.getDate() + 6);
       condicion = `fecha_entrada BETWEEN '${lunes.toISOString().slice(0, 10)}' AND '${domingo.toISOString().slice(0, 10)}'`;
