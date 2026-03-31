@@ -186,9 +186,13 @@ export function useFichajes() {
     try {
       const token = localStorage.getItem("token");
       const endpoint = tipo === "ENTRADA" ? "entrada" : "salida";
+      // Calcular fecha y hora local del dispositivo del usuario
+      const ahora = new Date();
+      const fecha = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}-${String(ahora.getDate()).padStart(2, "0")}`;
+      const hora = `${String(ahora.getHours()).padStart(2, "0")}:${String(ahora.getMinutes()).padStart(2, "0")}:${String(ahora.getSeconds()).padStart(2, "0")}`;
       await axios.post(
         `/api/fichajes/${endpoint}`,
-        { empleado_id },
+        { empleado_id, fecha, hora },
         { headers: { Authorization: `Bearer ${token}` } },
       );
       await fetchHistorial(empleado_id);
@@ -234,7 +238,6 @@ export function useFichajes() {
    */
   function formatFecha(fecha) {
     if (!fecha) return "";
-    console.log("formatFecha input:", fecha, typeof fecha);
     const str =
       fecha instanceof Date
         ? `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`

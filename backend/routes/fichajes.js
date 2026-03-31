@@ -85,8 +85,8 @@ router.post("/entrada", authMiddleware, async (req, res) => {
         .status(400)
         .json({ error: "Ya tienes una entrada registrada hoy sin salida." });
 
-    // Obtener fecha y hora locales (hora española) para el registro.
-    const { fecha, hora } = ahoraLocal();
+    // Fecha y hora local del dispositivo del usuario, enviada desde el frontend.
+    const { fecha, hora } = req.body;
     await db.execute(
       "INSERT INTO fichajes (empleado_id, fecha_entrada, hora_entrada) VALUES (?, ?, ?)",
       [empleado_id, fecha, hora],
@@ -117,8 +117,8 @@ router.post("/salida", authMiddleware, async (req, res) => {
         .status(400)
         .json({ error: "No tienes ninguna entrada registrada sin salida." });
 
-    // Obtener fecha y hora locales (hora española) para el registro.
-    const { fecha, hora } = ahoraLocal();
+    // Fecha y hora local del dispositivo del usuario, enviada desde el frontend.
+    const { fecha, hora } = req.body;
     await db.execute(
       "UPDATE fichajes SET fecha_salida = ?, hora_salida = ? WHERE id = ?",
       [fecha, hora, rows[0].id],
@@ -184,7 +184,6 @@ router.get("/:empleado_id", authMiddleware, async (req, res) => {
       const { fecha: hoyLocal } = ahoraLocal();
       const dia = fecha || hoyLocal;
       condicion = `fecha_entrada = '${dia}'`;
-
     } else if (periodo === "mes") {
       // Parsear a mediodía local para evitar desfases al cruzar medianoche UTC.
       const base = fecha ? new Date(fecha + "T12:00:00") : new Date();
@@ -193,7 +192,6 @@ router.get("/:empleado_id", authMiddleware, async (req, res) => {
         .toISOString()
         .slice(0, 10);
       condicion = `fecha_entrada BETWEEN '${inicio}' AND '${fin}'`;
-
     } else {
       // Por defecto: semana.
       // Parsear a mediodía local para evitar desfases al cruzar medianoche UTC.
