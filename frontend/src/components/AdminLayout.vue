@@ -74,11 +74,8 @@ const navItems = [
 <template>
   <div class="min-h-screen bg-slate-50 flex flex-col">
     <!-- Navbar superior con buscador, logo y reloj -->
-    <TheNavbar
-      :model-value="searchQuery"
-      @update:model-value="emit('update:searchQuery', $event)"
-      @toggle-sidebar="sidebarAbierto = !sidebarAbierto"
-    />
+    <TheNavbar :model-value="searchQuery" @update:model-value="emit('update:searchQuery', $event)"
+      @toggle-sidebar="sidebarAbierto = !sidebarAbierto" />
 
     <div class="flex flex-1 relative">
       <!--
@@ -87,25 +84,20 @@ const navItems = [
         Ancho reducido en tablet (lg:w-16, solo iconos)
         Ancho completo en desktop (xl:w-64, iconos + etiquetas)
       -->
-      <aside
-        :class="[
-          'bg-white border-r border-slate-100 flex flex-col sticky top-20 h-[calc(100vh-5rem)] shrink-0 transition-all duration-300 z-30',
-          'hidden lg:flex',
-          'lg:w-16 xl:w-64',
-        ]"
-      >
+      <aside :class="[
+        'bg-white border-r border-slate-100 flex flex-col sticky top-20 h-[calc(100vh-5rem)] shrink-0 transition-all duration-300 z-30',
+        'hidden lg:flex',
+        'lg:w-16 xl:w-64',
+      ]">
         <!-- Logo e identidad del panel -->
         <div class="px-3 xl:px-6 py-6 border-b border-slate-100">
           <div class="flex items-center gap-3">
             <div
-              class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 shrink-0"
-            >
+              class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200 shrink-0">
               <Shield class="w-4 h-4 text-white" />
             </div>
             <div class="hidden xl:block">
-              <p
-                class="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5"
-              >
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">
                 Panel
               </p>
               <p class="text-sm font-extrabold text-slate-900 leading-none">
@@ -117,18 +109,12 @@ const navItems = [
 
         <!-- Navegación principal: Equipo y Dashboard -->
         <nav class="flex-1 px-2 xl:px-3 py-4 space-y-1">
-          <button
-            v-for="item in navItems"
-            :key="item.to"
-            @click="navegar(item.to)"
+          <button v-for="item in navItems" :key="item.to" @click="navegar(item.to)"
             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all cursor-pointer"
-            :class="
-              route.path === item.to
+            :class="route.path === item.to
                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
                 : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
-            "
-            :title="item.label"
-          >
+              " :title="item.label">
             <component :is="item.icon" class="w-4 h-4 shrink-0" />
             <span class="hidden xl:inline">{{ item.label }}</span>
           </button>
@@ -136,11 +122,9 @@ const navItems = [
           <hr class="my-3 border-slate-100" />
 
           <!-- Acceso rápido para crear nuevo empleado -->
-          <button
-            @click="emit('abrir-nuevo')"
+          <button @click="emit('abrir-nuevo')"
             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all cursor-pointer"
-            title="Nuevo empleado"
-          >
+            title="Nuevo empleado">
             <UserPlus class="w-4 h-4 shrink-0" />
             <span class="hidden xl:inline">Nuevo empleado</span>
           </button>
@@ -148,20 +132,11 @@ const navItems = [
 
         <!-- Footer del sidebar: avatar del admin y botón de logout -->
         <div class="px-2 xl:px-3 py-4 border-t border-slate-100">
-          <div
-            class="flex items-center gap-3 px-3 py-3 rounded-xl bg-slate-50 mb-2"
-          >
-            <div
-              class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 p-0.5 shrink-0"
-            >
-              <div
-                class="w-full h-full rounded-full border-2 border-white overflow-hidden bg-slate-200"
-              >
-                <img
-                  src="https://ui-avatars.com/api/?name=Admin&background=random"
-                  alt="Admin"
-                />
-              </div>
+          <div class="flex items-center gap-3 px-3 py-3 rounded-xl bg-slate-50 mb-2">
+            <div class="w-8 h-8 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
+              <span class="text-indigo-600 font-bold text-xs">
+                {{ usuario?.nombre?.charAt(0) }}
+              </span>
             </div>
             <div class="flex-1 min-w-0 hidden xl:block">
               <p class="text-xs font-bold text-slate-900 truncate">
@@ -172,11 +147,9 @@ const navItems = [
               </p>
             </div>
           </div>
-          <button
-            @click="handleLogout"
+          <button @click="handleLogout"
             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-sm text-rose-400 hover:bg-rose-50 hover:text-rose-600 transition-all cursor-pointer"
-            title="Cerrar sesión"
-          >
+            title="Cerrar sesión">
             <LogOut class="w-4 h-4 shrink-0" />
             <span class="hidden xl:inline">Cerrar sesión</span>
           </button>
@@ -194,43 +167,30 @@ const navItems = [
       Sustituye al sidebar en pantallas pequeñas con navegación estilo app nativa
     -->
     <nav
-      class="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]"
-    >
+      class="fixed bottom-0 left-0 right-0 z-40 lg:hidden bg-white border-t border-slate-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
       <div class="flex items-center justify-around px-2 py-2">
-        <button
-          @click="navegar('/equipo')"
-          class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all cursor-pointer"
-          :class="
-            route.path === '/equipo' ? 'text-indigo-600' : 'text-slate-400'
-          "
-        >
+        <button @click="navegar('/equipo')"
+          class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all cursor-pointer" :class="route.path === '/equipo' ? 'text-indigo-600' : 'text-slate-400'
+            ">
           <Users class="w-5 h-5" />
           <span class="text-[10px] font-semibold">Equipo</span>
         </button>
 
-        <button
-          @click="navegar('/dashboard')"
-          class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all cursor-pointer"
-          :class="
-            route.path === '/dashboard' ? 'text-indigo-600' : 'text-slate-400'
-          "
-        >
+        <button @click="navegar('/dashboard')"
+          class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all cursor-pointer" :class="route.path === '/dashboard' ? 'text-indigo-600' : 'text-slate-400'
+            ">
           <LayoutDashboard class="w-5 h-5" />
           <span class="text-[10px] font-semibold">Dashboard</span>
         </button>
 
-        <button
-          @click="emit('abrir-nuevo')"
-          class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all cursor-pointer text-slate-400"
-        >
+        <button @click="emit('abrir-nuevo')"
+          class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all cursor-pointer text-slate-400">
           <UserPlus class="w-5 h-5" />
           <span class="text-[10px] font-semibold">Nuevo</span>
         </button>
 
-        <button
-          @click="handleLogout"
-          class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all cursor-pointer text-slate-400 hover:text-rose-500"
-        >
+        <button @click="handleLogout"
+          class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all cursor-pointer text-slate-400 hover:text-rose-500">
           <LogOut class="w-5 h-5" />
           <span class="text-[10px] font-semibold">Salir</span>
         </button>
