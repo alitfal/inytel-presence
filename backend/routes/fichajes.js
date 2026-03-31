@@ -188,9 +188,8 @@ router.get("/:empleado_id", authMiddleware, async (req, res) => {
       // Parsear a mediodía local para evitar desfases al cruzar medianoche UTC.
       const base = fecha ? new Date(fecha + "T12:00:00") : new Date();
       const inicio = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-01`;
-      const fin = new Date(base.getFullYear(), base.getMonth() + 1, 0)
-        .toISOString()
-        .slice(0, 10);
+      const finDate = new Date(base.getFullYear(), base.getMonth() + 1, 0);
+      const fin = `${finDate.getFullYear()}-${String(finDate.getMonth() + 1).padStart(2, "0")}-${String(finDate.getDate()).padStart(2, "0")}`;
       condicion = `fecha_entrada BETWEEN '${inicio}' AND '${fin}'`;
     } else {
       // Por defecto: semana.
@@ -201,7 +200,9 @@ router.get("/:empleado_id", authMiddleware, async (req, res) => {
       lunes.setDate(base.getDate() - diaSemana + 1);
       const domingo = new Date(lunes);
       domingo.setDate(lunes.getDate() + 6);
-      condicion = `fecha_entrada BETWEEN '${lunes.toISOString().slice(0, 10)}' AND '${domingo.toISOString().slice(0, 10)}'`;
+      const fmt = (x) =>
+        `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+      condicion = `fecha_entrada BETWEEN '${fmt(lunes)}' AND '${fmt(domingo)}'`;
     }
 
     const [rows] = await db.execute(
