@@ -93,7 +93,8 @@ export function useFichajes() {
     if (periodoActivo.value === "hoy") {
       const d = new Date(hoy);
       d.setDate(d.getDate() + offset.value);
-      return { periodo: "hoy", fecha: d.toISOString().slice(0, 10) };
+      const fecha = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      return { periodo: "hoy", fecha };
     }
 
     if (periodoActivo.value === "semana") {
@@ -102,12 +103,14 @@ export function useFichajes() {
       const dia = d.getDay() || 7;
       const lunes = new Date(d);
       lunes.setDate(d.getDate() - dia + 1);
-      return { periodo: "semana", fecha: lunes.toISOString().slice(0, 10) };
+      const fecha = `${lunes.getFullYear()}-${String(lunes.getMonth() + 1).padStart(2, "0")}-${String(lunes.getDate()).padStart(2, "0")}`;
+      return { periodo: "semana", fecha };
     }
 
     if (periodoActivo.value === "mes") {
       const d = new Date(hoy.getFullYear(), hoy.getMonth() + offset.value, 1);
-      return { periodo: "mes", fecha: d.toISOString().slice(0, 10) };
+      const fecha = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+      return { periodo: "mes", fecha };
     }
 
     return { periodo: periodoActivo.value };
