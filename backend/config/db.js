@@ -12,7 +12,8 @@ const db = mysql.createPool({
   connectionLimit: 10, // Máximo de conexiones simultáneas
   queueLimit: 0, // Sin límite de peticiones en cola
   enableKeepAlive: true, // Mantiene conexiones activas
-  keepAliveInitialDelay: 0,
+  keepAliveInitialDelay: 0, // Sin retraso inicial para keep-alive
+  dateStrings: true, // Devuelve fechas como strings en lugar de objetos Date
 });
 
 // Verificar conexión al arrancar

@@ -183,6 +183,11 @@ router.put("/:id/activo", authMiddleware, soloAdmin, async (req, res) => {
  * Calcula el resumen de horas trabajadas vs esperadas para una semana.
  * Acepta el parámetro ?semana=YYYY-Www para consultar semanas anteriores.
  * Devuelve desglose diario y totales semanales.
+ *
+ * Nota sobre fechas:
+ * Se usa fmt() en lugar de toISOString() en todos los cálculos de fecha
+ * para evitar desfases de zona horaria. toISOString() devuelve UTC, lo que
+ * con TZ=Europe/Madrid puede convertir medianoche local al día anterior.
  */
 router.get("/:id/horas", authMiddleware, async (req, res) => {
   try {
@@ -190,26 +195,39 @@ router.get("/:id/horas", authMiddleware, async (req, res) => {
     const semanaParam = req.query.semana;
     let inicioSemana, finSemana;
 
+    /**
+     * Formatea un objeto Date a "YYYY-MM-DD" usando la hora local del servidor.
+     * Evita el desfase UTC que produce toISOString() con TZ=Europe/Madrid.
+     *
+     * @param {Date} x
+     * @returns {string} Fecha en formato YYYY-MM-DD.
+     */
+    const fmt = (x) =>
+      `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}-${String(x.getDate()).padStart(2, "0")}`;
+
     if (semanaParam) {
+      // Calcular lunes y domingo a partir del parámetro YYYY-Www (ISO 8601).
       const [anio, semStr] = semanaParam.split("-W");
       const sem = parseInt(semStr);
+      // Partir del 1 de enero y avanzar (sem-1) semanas completas
       const d = new Date(anio, 0, 1 + (sem - 1) * 7);
       const dia = d.getDay();
       const lunes = new Date(d);
       lunes.setDate(d.getDate() - (dia === 0 ? 6 : dia - 1));
-      inicioSemana = lunes.toISOString().slice(0, 10);
       const domingo = new Date(lunes);
       domingo.setDate(lunes.getDate() + 6);
-      finSemana = domingo.toISOString().slice(0, 10);
+      inicioSemana = fmt(lunes);
+      finSemana = fmt(domingo);
     } else {
+      // Sin parámetro: usar la semana actual calculada desde hoy.
       const hoy = new Date();
       const dia = hoy.getDay();
       const lunes = new Date(hoy);
       lunes.setDate(hoy.getDate() - (dia === 0 ? 6 : dia - 1));
-      inicioSemana = lunes.toISOString().slice(0, 10);
       const domingo = new Date(lunes);
       domingo.setDate(lunes.getDate() + 6);
-      finSemana = domingo.toISOString().slice(0, 10);
+      inicioSemana = fmt(lunes);
+      finSemana = fmt(domingo);
     }
 
     const [[empleado]] = await db.execute(
@@ -225,13 +243,16 @@ router.get("/:id/horas", authMiddleware, async (req, res) => {
       [id, inicioSemana, finSemana],
     );
 
-    // Acumular minutos trabajados por día
+    // Acumular minutos trabajados por día.
+    // Con dateStrings:true en db.js, fecha_entrada llega como string "YYYY-MM-DD"
+    // directamente, sin necesidad de convertir objetos Date.
     const minutosPorDia = {};
     for (const j of jornadas) {
       if (!j.hora_salida) continue;
+      // Normalizar fecha_entrada: admite tanto string como objeto Date por seguridad
       const fecha =
         j.fecha_entrada instanceof Date
-          ? j.fecha_entrada.toISOString().slice(0, 10)
+          ? fmt(j.fecha_entrada)
           : String(j.fecha_entrada).slice(0, 10);
       const [he, mi_e] = j.hora_entrada.split(":").map(Number);
       const [hs, mi_s] = j.hora_salida.split(":").map(Number);
@@ -239,21 +260,22 @@ router.get("/:id/horas", authMiddleware, async (req, res) => {
       minutosPorDia[fecha] = (minutosPorDia[fecha] || 0) + mins;
     }
 
+    // Generar la lista de días laborables de la semana según configuración.
     const diasConfig = (empleado.dias_laborables || "1,2,3,4,5")
       .split(",")
       .map(Number);
     const diasEnSemana = [];
     for (let i = 0; i < 7; i++) {
-      const d = new Date(inicioSemana);
+      const d = new Date(inicioSemana + "T12:00:00"); // mediodía para evitar desfase
       d.setDate(d.getDate() + i);
-      const diaSemana = d.getDay() === 0 ? 7 : d.getDay();
-      if (diasConfig.includes(diaSemana))
-        diasEnSemana.push(d.toISOString().slice(0, 10));
+      const diaSemana = d.getDay() === 0 ? 7 : d.getDay(); // 1=lun … 7=dom
+      if (diasConfig.includes(diaSemana)) diasEnSemana.push(fmt(d));
     }
 
     const horasSemanales = empleado.horas_semanales || 40;
     const horasPorDia = horasSemanales / diasEnSemana.length;
 
+    // Construir resumen por día: horas trabajadas, esperadas y diferencia.
     const resumenDias = diasEnSemana.map((fecha) => {
       const mins = minutosPorDia[fecha] || 0;
       const horasTrabajadas = mins / 60;

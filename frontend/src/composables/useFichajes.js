@@ -232,13 +232,13 @@ export function useFichajes() {
    * @param {string|Date} fecha - Fecha a formatear.
    * @returns {string} Ejemplo: "lun, 10/05/2026".
    */
-  function formatFecha(fecha) {
+function formatFecha(fecha) {
   if (!fecha) return "";
-  // Extraer siempre el string YYYY-MM-DD directamente, sin pasar por toISOString()
-  // para evitar desfases UTC cuando mysql2 devuelve objetos Date.
+  console.log("formatFecha input:", fecha, typeof fecha);
   const str = fecha instanceof Date
     ? `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}-${String(fecha.getDate()).padStart(2, "0")}`
     : String(fecha).slice(0, 10);
+  console.log("formatFecha str:", str);
   return new Date(str + "T12:00:00").toLocaleDateString("es-ES", {
     weekday: "short",
     day: "2-digit",
