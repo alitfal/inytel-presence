@@ -20,12 +20,12 @@ const router = useRouter();
 const route = useRoute();
 
 // ── Estado del formulario ─────────────────────────────────────────────────────
-const token = ref("");           // Token JWT de recuperación extraído de la URL
-const passwordNueva = ref("");   // Nueva contraseña introducida por el usuario
+const token = ref(""); // Token JWT de recuperación extraído de la URL
+const passwordNueva = ref(""); // Nueva contraseña introducida por el usuario
 const passwordConfirm = ref(""); // Confirmación de la nueva contraseña
-const error = ref("");           // Mensaje de error de validación o de la API
-const exito = ref(false);        // true cuando la contraseña se ha cambiado correctamente
-const loading = ref(false);      // true mientras se espera respuesta de la API
+const error = ref(""); // Mensaje de error de validación o de la API
+const exito = ref(false); // true cuando la contraseña se ha cambiado correctamente
+const loading = ref(false); // true mientras se espera respuesta de la API
 const tokenInvalido = ref(false); // true si no hay token en la URL al montar
 
 // ── Ciclo de vida ─────────────────────────────────────────────────────────────
@@ -66,7 +66,8 @@ async function handleReset() {
     // Redirigir automáticamente al login tras 3 segundos
     setTimeout(() => router.push("/login"), 3000);
   } catch (err) {
-    error.value = err.response?.data?.error || "El enlace no es válido o ha expirado";
+    error.value =
+      err.response?.data?.error || "El enlace no es válido o ha expirado";
   } finally {
     loading.value = false;
   }
@@ -76,15 +77,17 @@ async function handleReset() {
 <template>
   <div class="min-h-screen bg-slate-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-10 w-full max-w-sm shadow-xl">
-
       <!-- Logo e identificación de la app -->
       <div class="mb-8 flex flex-col items-center">
         <div class="flex items-center gap-3 mb-3">
-          <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-indigo-200 shadow-lg">
+          <div
+            class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-indigo-200 shadow-lg"
+          >
             <span class="text-white font-black text-xl italic">I</span>
           </div>
           <h1 class="text-xl font-extrabold tracking-tighter">
-            INYTEL <span class="text-indigo-600 font-light ml-1">| Presence</span>
+            INYTEL
+            <span class="text-indigo-600 font-light ml-1">| Presence</span>
           </h1>
         </div>
         <p class="text-slate-400 text-sm">Nueva contraseña</p>
@@ -92,11 +95,15 @@ async function handleReset() {
 
       <!-- Estado: token ausente o inválido -->
       <div v-if="tokenInvalido" class="text-center space-y-4">
-        <div class="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center mx-auto">
+        <div
+          class="w-12 h-12 bg-rose-100 rounded-2xl flex items-center justify-center mx-auto"
+        >
           <span class="text-rose-500 text-xl">✕</span>
         </div>
         <p class="text-slate-700 font-bold">Enlace no válido</p>
-        <p class="text-slate-400 text-sm">Este enlace de recuperación no es válido o ha expirado.</p>
+        <p class="text-slate-400 text-sm">
+          Este enlace de recuperación no es válido o ha expirado.
+        </p>
         <button
           @click="router.push('/login')"
           class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl transition-colors cursor-pointer"
@@ -107,17 +114,24 @@ async function handleReset() {
 
       <!-- Estado: contraseña cambiada con éxito -->
       <div v-else-if="exito" class="text-center space-y-4">
-        <div class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto">
+        <div
+          class="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto"
+        >
           <span class="text-emerald-500 text-xl font-bold">✓</span>
         </div>
         <p class="text-slate-700 font-bold">Contraseña actualizada</p>
-        <p class="text-slate-400 text-sm">Tu contraseña ha sido cambiada correctamente. Serás redirigido al login en unos segundos.</p>
+        <p class="text-slate-400 text-sm">
+          Tu contraseña ha sido cambiada correctamente. Serás redirigido al
+          login en unos segundos.
+        </p>
       </div>
 
       <!-- Estado: formulario de nueva contraseña -->
       <div v-else class="space-y-4">
         <div>
-          <label class="text-slate-400 text-sm font-medium block mb-1">Nueva contraseña</label>
+          <label class="text-slate-400 text-sm font-medium block mb-1"
+            >Nueva contraseña</label
+          >
           <input
             v-model="passwordNueva"
             type="password"
@@ -126,18 +140,22 @@ async function handleReset() {
           />
         </div>
         <div>
-          <label class="text-slate-400 text-sm font-medium block mb-1">Confirmar contraseña</label>
+          <label class="text-slate-400 text-sm font-medium block mb-1"
+            >Confirmar contraseña</label
+          >
           <input
             v-model="passwordConfirm"
             type="password"
             placeholder="Repite la contraseña"
             class="w-full border border-slate-200 rounded-2xl px-4 py-3 outline-none focus:border-indigo-400 transition-colors text-sm"
-            @keyup.enter="handleReset" <!-- Permite enviar con Enter -->
+            @keyup.enter="handleReset"
           />
         </div>
 
         <!-- Mensaje de error de validación o de la API -->
-        <p v-if="error" class="text-rose-500 text-xs font-medium">{{ error }}</p>
+        <p v-if="error" class="text-rose-500 text-xs font-medium">
+          {{ error }}
+        </p>
 
         <!-- Botón de envío — deshabilitado mientras carga -->
         <button
@@ -145,7 +163,7 @@ async function handleReset() {
           :disabled="loading"
           class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-bold rounded-2xl transition-colors cursor-pointer"
         >
-          {{ loading ? 'Guardando...' : 'Guardar contraseña' }}
+          {{ loading ? "Guardando..." : "Guardar contraseña" }}
         </button>
 
         <button
@@ -155,7 +173,6 @@ async function handleReset() {
           ← Volver al login
         </button>
       </div>
-
     </div>
   </div>
 </template>
