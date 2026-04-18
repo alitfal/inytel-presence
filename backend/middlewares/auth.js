@@ -1,7 +1,7 @@
 // Middlewares de autenticación y autorización
 // Se ejecutan antes de los endpoints para verificar permisos
 const jwt = require("jsonwebtoken");
-const JWT_SECRET = process.env.JWT_SECRET || "inytel_secret_key_2024";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Verifica que la petición incluye un token JWT válido.
 // Si es válido, añade los datos del usuario a req.usuario
