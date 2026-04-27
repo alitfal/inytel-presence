@@ -197,7 +197,7 @@ El `Dockerfile` en la raíz del proyecto se encarga de:
 
 ## Licencia
 
-Proyecto desarrollado como Módulo de Proyecto del C.F.G.S. Administración de Sistemas Informáticos y en Red en el C.I.F.P. César Manrique.
+Proyecto desarrollado como Módulo de Proyecto del C.F.G.S. Desarrollo de Aplicaciones Web en el C.I.F.P. César Manrique.
 
 **Alumno:** Angel Luis Litago Falces  
 **Tutor:** José David Díaz Díaz  
