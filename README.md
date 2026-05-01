@@ -107,11 +107,12 @@ Crea el fichero `backend/.env` con el siguiente contenido:
 ```env
 DB_HOST=localhost
 DB_PORT=3306
-DB_USER=tu_usuario
 DB_PASSWORD=tu_contraseña
+DB_USER=tu_usuario
 DB_NAME=inytel_presence
 JWT_SECRET=tu_secreto_jwt
 RESEND_API_KEY=tu_api_key_resend
+APP_URL=https://inytel-presence.up.railway.app
 EMAIL_FROM=noreply@tudominio.com
 ```
 
