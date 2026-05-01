@@ -107,7 +107,7 @@ Crea el fichero `backend/.env` con el siguiente contenido:
 ```env
 DB_HOST=localhost
 DB_PORT=3306
-DB_PASSWORD=tu_contraseña
+DB_PASS=tu_contraseña
 DB_USER=tu_usuario
 DB_NAME=inytel_presence
 JWT_SECRET=tu_secreto_jwt
