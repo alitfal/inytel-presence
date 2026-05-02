@@ -275,7 +275,7 @@ async function fetchResumenSemanal() {
         axios
           .get(`${API}/empleados/${e.id}/horas`, { headers: headers() })
           .then((r) => {
-            // Guardia: descartar si el empleado no tiene nombre válido
+            // Guard: descartar si el empleado no tiene nombre válido
             if (!e.nombre) return null;
             return { ...r.data, nombre: e.nombre, cargo: e.cargo };
           })
