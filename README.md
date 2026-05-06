@@ -15,7 +15,7 @@ Aplicación web de control de presencia y registro de jornada laboral desarrolla
 - Lucide Vue
 
 **Backend**
-- Node.js v24 + Express
+- Node.js v22 + Express
 - MySQL 8 (via Railway)
 - JWT (jsonwebtoken)
 - bcryptjs
@@ -67,7 +67,7 @@ inytel-presence/
 
 ## Requisitos previos
 
-- Node.js v24 o superior
+- Node.js v22 o superior
 - pnpm v10 o superior
 - MySQL 8 (local o remoto)
 - Cuenta en [Railway](https://railway.app) (para despliegue)
