@@ -160,9 +160,9 @@ async function generarPDF(res, datos, desde, hasta) {
 
         // ── Logo ──────────────────────────────────────
         const logoX = 40, logoY = 40, logoSize = 36;
-doc.roundedRect(logoX, logoY, logoSize, logoSize, 7).fill("#4F46E5");
-doc.fontSize(22).font("Helvetica-BoldOblique").fillColor("white")
-   .text("I", logoX, logoY + 9, { width: logoSize, align: "center", lineBreak: false });
+        doc.roundedRect(logoX, logoY, logoSize, logoSize, 7).fill("#4F46E5");
+        doc.fontSize(22).font("Helvetica-BoldOblique").fillColor("white")
+            .text("I", logoX, logoY + 9, { width: logoSize, align: "center", lineBreak: false });
 
         // ── Nombre aplicación ─────────────────────────
         doc.fontSize(15).font("Helvetica-Bold").fillColor("#0f172a")
