@@ -13,7 +13,7 @@ const { notificarNuevoEmpleado } = require("../services/email");
  * Devuelve todos los empleados con su estado dinámico (DENTRO/FUERA).
  * El estado se calcula en tiempo real consultando el último fichaje.
  */
-router.get("/", async (req, res) => {
+router.get("/", authMiddleware, soloAdmin, async (req, res) => {
   try {
     const [rows] = await db.execute("SELECT * FROM empleados");
     const empleados = await Promise.all(
@@ -32,7 +32,7 @@ router.get("/", async (req, res) => {
  * GET /api/empleados/:id
  * Devuelve un empleado por su ID con estado dinámico.
  */
-router.get("/:id", async (req, res) => {
+router.get("/:id", authMiddleware, async (req, res) => {
   try {
     const [rows] = await db.execute("SELECT * FROM empleados WHERE id = ?", [
       req.params.id,

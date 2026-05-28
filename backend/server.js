@@ -27,10 +27,9 @@ app.use(express.json());
 // ─── RATE LIMITING ────────────────────────────
 const rateLimit = require("express-rate-limit");
 
-// Límite general para toda la API
 const limiterGeneral = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100,                  // máximo 100 peticiones por IP
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: { error: "Demasiadas peticiones. Inténtalo de nuevo más tarde." },
   standardHeaders: true,
   legacyHeaders: false,
@@ -38,15 +37,16 @@ const limiterGeneral = rateLimit({
 
 const limiterLogin = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX) : 10,
   message: { error: "Demasiados intentos. Inténtalo de nuevo en 15 minutos." },
   standardHeaders: true,
   legacyHeaders: false,
+  validate: { trustProxy: false }
 });
 
 const limiterRecuperar = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: process.env.NODE_ENV === 'test' ? 1000 : 10,
   message: { error: "Demasiados intentos. Inténtalo de nuevo en 15 minutos." },
   standardHeaders: true,
   legacyHeaders: false,
