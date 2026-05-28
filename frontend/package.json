@@ -30,6 +30,8 @@
     "@rollup/rollup-linux-x64": "npm:null@*"
   },
   "pnpm": {
-  "onlyBuiltDependencies": ["esbuild"]
-}
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
 }
