@@ -81,7 +81,15 @@ async function generarExcel(res, datos, desde, hasta) {
         sheet.getCell("A1").alignment = { horizontal: "center" };
 
         sheet.mergeCells("A2:G2");
-        sheet.getCell("A2").value = `Empleado: ${empleado.nombre} | Cargo: ${empleado.cargo} | Período: ${desde} → ${hasta}`;
+        const fmtLocal = (f) => {
+            const [y, m, d] = f.split("-");
+            return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric"
+            });
+        };
+        sheet.getCell("A2").value = `Empleado: ${empleado.nombre} | Cargo: ${empleado.cargo} | Período: ${fmtLocal(desde)} — ${fmtLocal(hasta)}`;
         sheet.getCell("A2").alignment = { horizontal: "center" };
 
         sheet.addRow([]);
@@ -182,8 +190,16 @@ async function generarPDF(res, datos, desde, hasta) {
             .text(`${empleado.nombre}`, 40, 100);
         doc.fontSize(9).font("Helvetica").fillColor("#475569")
             .text(`${empleado.cargo} · ${empleado.departamento || ""}`, 40, 114);
+        const fmtLocal = (f) => {
+            const [y, m, d] = f.split("-");
+            return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric"
+            });
+        };
         doc.fontSize(9).fillColor("#64748b")
-            .text(`Período: ${desde} → ${hasta}   ·   Generado: ${new Date().toLocaleDateString("es-ES")}`, 40, 128);
+            .text(`Período: ${fmtLocal(desde)} — ${fmtLocal(hasta)}   ·   Generado: ${new Date().toLocaleDateString(undefined, { day: "2-digit", month: "2-digit", year: "numeric" })}`, 40, 128);
 
         // ── Tabla ─────────────────────────────────────
         const colWidths = [85, 60, 60, 65, 70, 115];

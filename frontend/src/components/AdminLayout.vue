@@ -28,6 +28,7 @@ import {
   LogOut,
   UserPlus,
   Shield,
+  FileText,
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -68,6 +69,7 @@ function navegar(to) {
 const navItems = [
   { label: "Equipo", icon: Users, to: "/equipo" },
   { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
+  { label: "Informes", icon: FileText, to: "/informes", }
 ];
 </script>
 
@@ -112,8 +114,8 @@ const navItems = [
           <button v-for="item in navItems" :key="item.to" @click="navegar(item.to)"
             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-semibold text-sm transition-all cursor-pointer"
             :class="route.path === item.to
-                ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
+              : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
               " :title="item.label">
             <component :is="item.icon" class="w-4 h-4 shrink-0" />
             <span class="hidden xl:inline">{{ item.label }}</span>
@@ -181,6 +183,13 @@ const navItems = [
             ">
           <LayoutDashboard class="w-5 h-5" />
           <span class="text-[10px] font-semibold">Dashboard</span>
+        </button>
+
+        <button @click="navegar('/informes')"
+          class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all cursor-pointer"
+          :class="route.path === '/informes' ? 'text-indigo-600' : 'text-slate-400'">
+          <FileText class="w-5 h-5" />
+          <span class="text-[10px] font-semibold">Informes</span>
         </button>
 
         <button @click="emit('abrir-nuevo')"
