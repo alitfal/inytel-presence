@@ -5,6 +5,8 @@ const router = express.Router();
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
+const { registrarAudit } = require("../services/audit");
+
 const {
   authMiddleware,
   soloAdmin,
@@ -47,14 +49,16 @@ router.post("/login", async (req, res) => {
     const [rows] = await db.execute("SELECT * FROM usuarios WHERE email = ?", [
       email,
     ]);
-    if (rows.length === 0)
+    if (rows.length === 0) {
+      await registrarAudit({ email, accion: "LOGIN_FALLIDO", ip: req.ip });
       return res.status(401).json({ error: "Credenciales incorrectas" });
-
+    }
     const usuario = rows[0];
     const valido = await bcrypt.compare(password, usuario.password);
-    if (!valido)
+    if (!valido) {
+      await registrarAudit({ email, accion: "LOGIN_FALLIDO", ip: req.ip });
       return res.status(401).json({ error: "Credenciales incorrectas" });
-
+    }
     if (usuario.empleado_id) {
       const [[empleado]] = await db.execute(
         "SELECT activo FROM empleados WHERE id = ?",
@@ -76,6 +80,7 @@ router.post("/login", async (req, res) => {
       JWT_SECRET,
       { expiresIn: "8h" },
     );
+    await registrarAudit({ usuario_id: usuario.id, email: usuario.email, accion: "LOGIN_EXITOSO", ip: req.ip });
     res.json({
       token,
       usuario: {
@@ -106,6 +111,7 @@ router.put("/password", authMiddleware, async (req, res) => {
     const valido = await bcrypt.compare(password_actual, usuario.password);
     if (!valido)
       return res.status(401).json({ error: "Contraseña actual incorrecta" });
+
     const hash = await bcrypt.hash(password_nueva, 10);
     await db.execute("UPDATE usuarios SET password = ? WHERE id = ?", [
       hash,
@@ -114,6 +120,12 @@ router.put("/password", authMiddleware, async (req, res) => {
     await notificarPasswordActualizada({
       nombre: usuario.nombre,
       email: usuario.email,
+    });
+    await registrarAudit({
+      usuario_id: req.usuario.id,
+      email: usuario.email,
+      accion: "PASSWORD_CAMBIADA",
+      ip: req.ip
     });
     res.json({ mensaje: "Contraseña actualizada correctamente" });
   } catch (err) {
@@ -150,6 +162,14 @@ router.put(
         nombre: usuario.nombre,
         email: usuario.email,
         password_nueva,
+      });
+      await registrarAudit({
+        usuario_id: req.usuario.id,
+        email: usuario.email,
+        accion: "PASSWORD_RESETEADA_POR_ADMIN",
+        entidad: "usuarios",
+        entidad_id: parseInt(req.params.usuario_id),
+        ip: req.ip
       });
       res.json({ mensaje: "Contraseña reseteada correctamente" });
     } catch (err) {
