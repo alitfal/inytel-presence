@@ -6,7 +6,7 @@ RUN npm install -g pnpm
 
 COPY . .
 
-RUN cd frontend && pnpm install && pnpm run build
+RUN cd frontend && pnpm install --allow-build=esbuild && pnpm run build
 
 RUN cd backend && pnpm install
 
