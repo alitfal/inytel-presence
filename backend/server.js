@@ -36,18 +36,25 @@ const limiterGeneral = rateLimit({
   legacyHeaders: false,
 });
 
-// Límite estricto solo para login y recuperación de contraseña
-const limiterAuth = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 10,                   // máximo 10 intentos por IP
+const limiterLogin = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: "Demasiados intentos. Inténtalo de nuevo en 15 minutos." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const limiterRecuperar = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   message: { error: "Demasiados intentos. Inténtalo de nuevo en 15 minutos." },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 app.use("/api", limiterGeneral);
-app.use("/api/auth/login", limiterAuth);
-app.use("/api/auth/recuperar", limiterAuth);
+app.use("/api/auth/login", limiterLogin);
+app.use("/api/auth/recuperar", limiterRecuperar);
 
 // Servir el frontend compilado de Vue.js
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
@@ -63,4 +70,9 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
 });
 
-app.listen(3001, () => console.log("🚀 API lista en puerto 3001"));
+const PORT = process.env.PORT || 3001;
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`🚀 API lista en puerto ${PORT}`));
+}
+
+module.exports = app;
