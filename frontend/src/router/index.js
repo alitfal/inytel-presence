@@ -25,6 +25,7 @@ import LoginView from "../views/LoginView.vue";
 import EquipoView from "../views/EquipoView.vue";
 import DashboardView from "../views/DashboardView.vue";
 import InformesView from "../views/InformesView.vue";
+import IncidenciasView from "../views/IncidenciasView.vue";
 import PerfilView from "../views/PerfilView.vue";
 import ResetPasswordView from "../views/ResetPasswordView.vue";
 
@@ -55,6 +56,12 @@ const routes = [
   {
     path: "/informes",
     component: InformesView,
+    meta: { requiereAuth: true, soloAdmin: true },
+  },
+
+  {
+    path: "/incidencias",
+    component: IncidenciasView,
     meta: { requiereAuth: true, soloAdmin: true },
   },
 
