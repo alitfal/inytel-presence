@@ -29,7 +29,8 @@ import {
   UserPlus,
   Shield,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Clock
 } from "lucide-vue-next";
 
 const props = defineProps({
@@ -72,6 +73,7 @@ const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, to: "/dashboard" },
   { label: "Informes", icon: FileText, to: "/informes", },
   { label: "Incidencias", icon: AlertCircle, to: "/incidencias" },
+  { label: "Control Horario", icon: Clock, to: "/control-horario" },
 ];
 </script>
 
@@ -199,6 +201,13 @@ const navItems = [
           :class="route.path === '/incidencias' ? 'text-indigo-600' : 'text-slate-400'">
           <AlertCircle class="w-5 h-5" />
           <span class="text-[10px] font-semibold">Incidencias</span>
+        </button>
+
+        <button @click="navegar('/control-horario')"
+          class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-all cursor-pointer"
+          :class="route.path === '/control-horario' ? 'text-indigo-600' : 'text-slate-400'">
+          <Clock class="w-5 h-5" />
+          <span class="text-[10px] font-semibold">Horario</span>
         </button>
 
         <button @click="emit('abrir-nuevo')"

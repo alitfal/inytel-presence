@@ -26,6 +26,7 @@ import EquipoView from "../views/EquipoView.vue";
 import DashboardView from "../views/DashboardView.vue";
 import InformesView from "../views/InformesView.vue";
 import IncidenciasView from "../views/IncidenciasView.vue";
+import ControlHorarioView from "../views/ControlHorarioView.vue";
 import PerfilView from "../views/PerfilView.vue";
 import ResetPasswordView from "../views/ResetPasswordView.vue";
 
@@ -62,6 +63,12 @@ const routes = [
   {
     path: "/incidencias",
     component: IncidenciasView,
+    meta: { requiereAuth: true, soloAdmin: true },
+  },
+
+  {
+    path: "/control-horario",
+    component: ControlHorarioView,
     meta: { requiereAuth: true, soloAdmin: true },
   },
 
