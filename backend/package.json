@@ -38,5 +38,10 @@
         "DOTENV_CONFIG_PATH": ".env.test"
       }
     }
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "unrs-resolver"
+    ]
   }
 }
