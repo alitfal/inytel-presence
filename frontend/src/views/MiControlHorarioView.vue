@@ -172,7 +172,7 @@ onMounted(async () => {
                         <ChevronLeft class="w-4 h-4" />
                     </button>
                     <span class="text-sm font-bold text-slate-900 capitalize min-w-32 text-center">{{ etiquetaMes
-                        }}</span>
+                    }}</span>
                     <button @click="mesSiguiente" :disabled="esMesActual"
                         class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed">
                         <ChevronRight class="w-4 h-4" />
@@ -226,13 +226,15 @@ onMounted(async () => {
 
                 <!-- Estado del periodo -->
                 <div class="flex items-center gap-3 mb-4 flex-wrap">
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Estado</span>
-                    <span
-                        class="flex items-center gap-1.5 bg-emerald-100 text-emerald-600 text-xs font-bold px-3 py-1 rounded-lg">
-                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                        En progreso
+                    <span class="flex items-center gap-1.5 text-xs font-bold px-3 py-1 rounded-lg"
+                        :class="esMesActual ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-500'">
+                        <span class="w-1.5 h-1.5 rounded-full"
+                            :class="esMesActual ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'"></span>
+                        {{ esMesActual ? 'En progreso' : 'Periodo cerrado' }}
                     </span>
-                    <span class="text-xs text-slate-400">Esta hoja de fichajes corresponde a un periodo abierto</span>
+                    <span class="text-xs text-slate-400">
+                        {{ esMesActual ? 'Esta hoja de fichajes corresponde a un periodo abierto' : 'Este periodo ya está cerrado' }}
+                    </span>
                 </div>
 
                 <!-- Tabla desglose día a día -->
@@ -270,7 +272,7 @@ onMounted(async () => {
                                     formatMin(dia.horas_trabajadas_min) }}</span>
                                 <span class="text-slate-300 text-xs">/</span>
                                 <span class="font-mono text-slate-400 text-xs">{{ formatMin(dia.horas_planificadas_min)
-                                    }}</span>
+                                }}</span>
                             </div>
                             <!-- Horario de entrada/salida si fichó -->
                             <p v-if="dia.hora_entrada" class="text-[10px] text-slate-300 mt-0.5 font-mono">

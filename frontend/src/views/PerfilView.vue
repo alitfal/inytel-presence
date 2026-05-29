@@ -307,11 +307,6 @@ onMounted(async () => {
                 class="mt-3 w-full py-2.5 border border-indigo-200 hover:border-indigo-400 text-indigo-600 font-bold rounded-2xl text-sm transition-colors cursor-pointer">
                 Ver control horario
               </button>
-
-              <button @click="router.push('/mi-control-horario')"
-                class="mt-3 w-full py-2.5 border border-indigo-200 hover:border-indigo-400 text-indigo-600 font-bold rounded-2xl text-sm transition-colors cursor-pointer">
-                Ver control horario
-              </button>
             </div>
 
             <!-- Tarjeta de resumen de horas con barra de progreso -->
