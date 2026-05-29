@@ -183,16 +183,12 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div
-    class="min-h-screen bg-slate-50 font-sans antialiased text-slate-900 pb-20"
-  >
+  <div class="min-h-screen bg-slate-50 font-sans antialiased text-slate-900 pb-20">
     <!-- Header: logo, botón cambiar contraseña y cerrar sesión -->
     <div class="bg-white border-b border-slate-100 px-6 py-4">
       <div class="max-w-6xl mx-auto flex justify-between items-center">
         <div class="flex items-center gap-3">
-          <div
-            class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-indigo-200 shadow-lg"
-          >
+          <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center shadow-indigo-200 shadow-lg">
             <span class="text-white font-black text-xl italic">I</span>
           </div>
           <h1 class="text-xl font-extrabold tracking-tighter">
@@ -202,16 +198,12 @@ onMounted(async () => {
         </div>
         <div class="flex gap-2">
           <!-- Acceso al modal de cambio de contraseña -->
-          <button
-            @click="mostrarCambiarPassword = true"
-            class="border border-slate-200 hover:border-indigo-400 hover:text-indigo-600 text-slate-400 p-2.5 rounded-xl transition-all cursor-pointer"
-          >
+          <button @click="mostrarCambiarPassword = true"
+            class="border border-slate-200 hover:border-indigo-400 hover:text-indigo-600 text-slate-400 p-2.5 rounded-xl transition-all cursor-pointer">
             <KeyRound class="w-4 h-4" />
           </button>
-          <button
-            @click="handleLogout"
-            class="bg-rose-50 hover:bg-rose-100 text-rose-500 px-5 py-2 rounded-xl font-bold text-sm transition-all cursor-pointer"
-          >
+          <button @click="handleLogout"
+            class="bg-rose-50 hover:bg-rose-100 text-rose-500 px-5 py-2 rounded-xl font-bold text-sm transition-all cursor-pointer">
             Salir
           </button>
         </div>
@@ -220,10 +212,7 @@ onMounted(async () => {
 
     <main class="max-w-6xl mx-auto px-6 py-8">
       <!-- Estado de carga inicial del perfil -->
-      <div
-        v-if="loadingEmpleado"
-        class="flex justify-center py-20 animate-pulse text-indigo-600 font-bold"
-      >
+      <div v-if="loadingEmpleado" class="flex justify-center py-20 animate-pulse text-indigo-600 font-bold">
         Cargando perfil...
       </div>
 
@@ -233,42 +222,29 @@ onMounted(async () => {
           <!-- Columna izquierda: datos de perfil y resumen de horas -->
           <div class="space-y-6">
             <!-- Tarjeta de perfil: avatar, datos personales y botones de fichaje -->
-            <div
-              class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm"
-            >
+            <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm">
               <div class="flex items-center gap-4 mb-6">
                 <div
-                  class="w-20 h-20 bg-indigo-600 rounded-2xl flex items-center justify-center text-3xl font-black text-white shrink-0"
-                >
+                  class="w-20 h-20 bg-indigo-600 rounded-2xl flex items-center justify-center text-3xl font-black text-white shrink-0">
                   {{ empleado.nombre.charAt(0) }}
                 </div>
                 <div>
                   <h2 class="text-2xl font-black text-slate-900">
                     {{ empleado.nombre }}
                   </h2>
-                  <p
-                    class="text-slate-400 text-sm uppercase tracking-wider font-medium"
-                  >
+                  <p class="text-slate-400 text-sm uppercase tracking-wider font-medium">
                     {{ empleado.cargo }}
                   </p>
                   <!-- Indicador de estado con punto animado -->
                   <div class="flex items-center gap-2 mt-2">
-                    <span
-                      :class="
-                        empleado.estado === 'DENTRO'
-                          ? 'bg-emerald-500'
-                          : 'bg-slate-300'
-                      "
-                      class="w-2 h-2 rounded-full animate-pulse"
-                    ></span>
-                    <span
-                      :class="
-                        empleado.estado === 'DENTRO'
-                          ? 'text-emerald-600'
-                          : 'text-slate-400'
-                      "
-                      class="text-xs font-bold uppercase"
-                    >
+                    <span :class="empleado.estado === 'DENTRO'
+                      ? 'bg-emerald-500'
+                      : 'bg-slate-300'
+                      " class="w-2 h-2 rounded-full animate-pulse"></span>
+                    <span :class="empleado.estado === 'DENTRO'
+                      ? 'text-emerald-600'
+                      : 'text-slate-400'
+                      " class="text-xs font-bold uppercase">
                       {{ empleado.estado }}
                     </span>
                   </div>
@@ -277,42 +253,32 @@ onMounted(async () => {
 
               <!-- Filas de datos personales -->
               <div class="text-sm space-y-0">
-                <div
-                  class="flex justify-between py-3 border-b border-slate-100"
-                >
+                <div class="flex justify-between py-3 border-b border-slate-100">
                   <span class="text-slate-400 font-medium">DNI</span>
                   <span class="text-slate-700 font-medium">{{
                     empleado.dni
                   }}</span>
                 </div>
-                <div
-                  class="flex justify-between py-3 border-b border-slate-100"
-                >
+                <div class="flex justify-between py-3 border-b border-slate-100">
                   <span class="text-slate-400 font-medium">Email</span>
                   <span class="text-slate-700 font-medium truncate ml-4">{{
                     empleado.email
                   }}</span>
                 </div>
-                <div
-                  class="flex justify-between py-3 border-b border-slate-100"
-                >
+                <div class="flex justify-between py-3 border-b border-slate-100">
                   <span class="text-slate-400 font-medium">Teléfono</span>
                   <span class="text-slate-700 font-medium">{{
                     empleado.telefono
                   }}</span>
                 </div>
-                <div
-                  class="flex justify-between py-3 border-b border-slate-100"
-                >
+                <div class="flex justify-between py-3 border-b border-slate-100">
                   <span class="text-slate-400 font-medium">Departamento</span>
                   <span class="text-slate-700 font-medium">{{
                     empleado.departamento
                   }}</span>
                 </div>
                 <div class="flex justify-between py-3">
-                  <span class="text-slate-400 font-medium"
-                    >Alta en empresa</span
-                  >
+                  <span class="text-slate-400 font-medium">Alta en empresa</span>
                   <span class="text-slate-700 font-medium">{{
                     new Date(empleado.fecha_alta).toLocaleDateString("es-ES")
                   }}</span>
@@ -320,41 +286,39 @@ onMounted(async () => {
               </div>
 
               <!-- Error de fichaje si la API devuelve un fallo -->
-              <div
-                v-if="errorFichaje"
-                class="mt-4 bg-rose-50 border border-rose-100 text-rose-600 text-sm font-medium rounded-2xl px-4 py-3 text-center"
-              >
+              <div v-if="errorFichaje"
+                class="mt-4 bg-rose-50 border border-rose-100 text-rose-600 text-sm font-medium rounded-2xl px-4 py-3 text-center">
                 {{ errorFichaje }}
               </div>
 
               <!-- Botones de fichaje: deshabilitados según el estado actual -->
               <div class="mt-4 flex gap-3">
-                <button
-                  @click="handleFichar('ENTRADA')"
-                  :disabled="empleado.estado === 'DENTRO'"
-                  class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-colors cursor-pointer"
-                >
+                <button @click="handleFichar('ENTRADA')" :disabled="empleado.estado === 'DENTRO'"
+                  class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-colors cursor-pointer">
                   Entrada
                 </button>
-                <button
-                  @click="handleFichar('SALIDA')"
-                  :disabled="empleado.estado === 'FUERA'"
-                  class="flex-1 py-3 bg-rose-500 hover:bg-rose-600 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-colors cursor-pointer"
-                >
+                <button @click="handleFichar('SALIDA')" :disabled="empleado.estado === 'FUERA'"
+                  class="flex-1 py-3 bg-rose-500 hover:bg-rose-600 disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold rounded-2xl transition-colors cursor-pointer">
                   Salida
                 </button>
               </div>
+
+              <button @click="router.push('/mi-control-horario')"
+                class="mt-3 w-full py-2.5 border border-indigo-200 hover:border-indigo-400 text-indigo-600 font-bold rounded-2xl text-sm transition-colors cursor-pointer">
+                Ver control horario
+              </button>
+
+              <button @click="router.push('/mi-control-horario')"
+                class="mt-3 w-full py-2.5 border border-indigo-200 hover:border-indigo-400 text-indigo-600 font-bold rounded-2xl text-sm transition-colors cursor-pointer">
+                Ver control horario
+              </button>
             </div>
 
             <!-- Tarjeta de resumen de horas con barra de progreso -->
-            <div
-              class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm"
-            >
+            <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="font-bold text-slate-900">{{ tituloHoras }}</h3>
-                <span
-                  class="text-xs font-bold text-slate-400 uppercase tracking-wider"
-                >
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">
                   {{ horasSemanales.diasTrabajados }} día{{
                     horasSemanales.diasTrabajados !== 1 ? "s" : ""
                   }}
@@ -364,38 +328,25 @@ onMounted(async () => {
                 <span class="text-3xl font-black text-slate-900">{{
                   horasSemanales.texto
                 }}</span>
-                <span class="text-sm text-slate-400 font-medium mb-1"
-                  >/ {{ objetivoHoras }}h objetivo</span
-                >
+                <span class="text-sm text-slate-400 font-medium mb-1">/ {{ objetivoHoras }}h objetivo</span>
               </div>
               <!-- Barra de progreso: color según porcentaje alcanzado -->
-              <div
-                class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden"
-              >
-                <div
-                  class="h-2.5 rounded-full transition-all duration-700"
-                  :class="
-                    horasSemanales.porcentaje >= 100
-                      ? 'bg-emerald-500'
-                      : horasSemanales.porcentaje >= 60
-                        ? 'bg-indigo-500'
-                        : 'bg-amber-400'
-                  "
-                  :style="{ width: horasSemanales.porcentaje + '%' }"
-                ></div>
+              <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                <div class="h-2.5 rounded-full transition-all duration-700" :class="horasSemanales.porcentaje >= 100
+                  ? 'bg-emerald-500'
+                  : horasSemanales.porcentaje >= 60
+                    ? 'bg-indigo-500'
+                    : 'bg-amber-400'
+                  " :style="{ width: horasSemanales.porcentaje + '%' }"></div>
               </div>
               <div class="flex justify-between mt-1.5">
                 <span class="text-xs text-slate-400">0h</span>
-                <span
-                  class="text-xs font-bold"
-                  :class="
-                    horasSemanales.porcentaje >= 100
-                      ? 'text-emerald-500'
-                      : horasSemanales.porcentaje >= 60
-                        ? 'text-indigo-500'
-                        : 'text-amber-500'
-                  "
-                >
+                <span class="text-xs font-bold" :class="horasSemanales.porcentaje >= 100
+                  ? 'text-emerald-500'
+                  : horasSemanales.porcentaje >= 60
+                    ? 'text-indigo-500'
+                    : 'text-amber-500'
+                  ">
                   {{ horasSemanales.porcentaje }}%
                 </span>
                 <span class="text-xs text-slate-400">{{ objetivoHoras }}h</span>
@@ -409,115 +360,78 @@ onMounted(async () => {
 
             <!-- Selector de periodo: Hoy / Semana / Mes -->
             <div class="flex gap-2 mb-3">
-              <button
-                v-for="p in [
-                  { key: 'hoy', label: 'Hoy' },
-                  { key: 'semana', label: 'Semana' },
-                  { key: 'mes', label: 'Mes' },
-                ]"
-                :key="p.key"
-                @click="cambiarPeriodo(empleado.id, p.key)"
-                :class="
-                  periodoActivo === p.key
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
-                "
-                class="flex-1 py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer"
-              >
+              <button v-for="p in [
+                { key: 'hoy', label: 'Hoy' },
+                { key: 'semana', label: 'Semana' },
+                { key: 'mes', label: 'Mes' },
+              ]" :key="p.key" @click="cambiarPeriodo(empleado.id, p.key)" :class="periodoActivo === p.key
+                ? 'bg-indigo-600 text-white'
+                : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                " class="flex-1 py-2 text-xs font-bold rounded-xl transition-colors cursor-pointer">
                 {{ p.label }}
               </button>
             </div>
 
             <!-- Navegación temporal: periodo anterior / siguiente -->
             <div class="flex items-center justify-between mb-4">
-              <button
-                @click="navegarPeriodo(empleado.id, -1)"
-                class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
-              >
+              <button @click="navegarPeriodo(empleado.id, -1)"
+                class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer">
                 <ChevronLeft class="w-4 h-4" />
               </button>
               <span class="text-xs font-medium text-slate-500 text-center">{{
                 etiquetaPeriodo
               }}</span>
               <!-- Deshabilitado si ya estamos en el periodo actual -->
-              <button
-                @click="navegarPeriodo(empleado.id, 1)"
-                :disabled="offset >= 0"
-                class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer disabled:opacity-30"
-              >
+              <button @click="navegarPeriodo(empleado.id, 1)" :disabled="offset >= 0"
+                class="p-1 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer disabled:opacity-30">
                 <ChevronRight class="w-4 h-4" />
               </button>
             </div>
 
             <!-- Estado de carga -->
-            <div
-              v-if="loadingHistorial"
-              class="text-center py-4 text-indigo-600 text-sm font-bold animate-pulse"
-            >
+            <div v-if="loadingHistorial" class="text-center py-4 text-indigo-600 text-sm font-bold animate-pulse">
               Cargando historial...
             </div>
 
             <!-- Sin fichajes en el periodo -->
-            <div
-              v-else-if="historial.length === 0"
-              class="text-center py-6 text-slate-300 text-sm font-medium"
-            >
+            <div v-else-if="historial.length === 0" class="text-center py-6 text-slate-300 text-sm font-medium">
               Sin fichajes en este periodo
             </div>
 
             <!-- Lista de jornadas con scroll interno -->
             <div v-else class="space-y-2 overflow-y-auto pr-1" style="max-height: 465px">
-              <div
-                v-for="j in historial"
-                :key="j.id"
-                class="bg-slate-50 rounded-2xl px-4 py-3"
-                :class="j.motivo_incidencia ? 'border border-amber-200' : ''"
-              >
+              <div v-for="j in historial" :key="j.id" class="bg-slate-50 rounded-2xl px-4 py-3"
+                :class="j.motivo_incidencia ? 'border border-amber-200' : ''">
                 <!-- Cabecera: fecha + botón expandir incidencia si aplica -->
                 <div class="flex items-center justify-between mb-1">
                   <span class="text-xs font-bold text-slate-500 capitalize">{{
                     formatFecha(j.fecha_entrada)
                   }}</span>
-                  <button
-                    v-if="j.motivo_incidencia"
-                    @click="j._expandido = !j._expandido"
-                    class="text-[10px] font-bold text-amber-500 bg-amber-50 hover:bg-amber-100 px-2 py-0.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
-                  >
+                  <button v-if="j.motivo_incidencia" @click="j._expandido = !j._expandido"
+                    class="text-[10px] font-bold text-amber-500 bg-amber-50 hover:bg-amber-100 px-2 py-0.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1">
                     Incidencia {{ j._expandido ? "▲" : "▼" }}
                   </button>
                 </div>
 
                 <!-- Hora entrada / salida + duración -->
                 <div class="flex items-center gap-3 text-xs">
-                  <span
-                    class="bg-emerald-100 text-emerald-600 font-bold px-2 py-1 rounded-lg"
-                  >
+                  <span class="bg-emerald-100 text-emerald-600 font-bold px-2 py-1 rounded-lg">
                     ▶ {{ j.hora_entrada?.slice(0, 5) || "--:--" }}
                   </span>
                   <span class="text-slate-300">→</span>
-                  <span
-                    :class="
-                      j.hora_salida
-                        ? 'bg-rose-100 text-rose-500'
-                        : 'bg-slate-100 text-slate-400'
-                    "
-                    class="font-bold px-2 py-1 rounded-lg"
-                  >
+                  <span :class="j.hora_salida
+                    ? 'bg-rose-100 text-rose-500'
+                    : 'bg-slate-100 text-slate-400'
+                    " class="font-bold px-2 py-1 rounded-lg">
                     ■ {{ j.hora_salida?.slice(0, 5) || "En curso" }}
                   </span>
-                  <span
-                    v-if="j.hora_salida"
-                    class="text-slate-400 ml-auto font-medium"
-                  >
+                  <span v-if="j.hora_salida" class="text-slate-400 ml-auto font-medium">
                     {{ formatJornada(j).duracion }}
                   </span>
                 </div>
 
                 <!-- Detalle expandible de incidencia -->
-                <div
-                  v-if="j.motivo_incidencia && j._expandido"
-                  class="mt-3 pt-3 border-t border-amber-100 space-y-2"
-                >
+                <div v-if="j.motivo_incidencia && j._expandido" class="mt-3 pt-3 border-t border-amber-100 space-y-2">
                   <div class="flex justify-between text-xs">
                     <span class="text-slate-400 font-medium">Motivo</span>
                     <span class="font-bold text-amber-600 capitalize">
@@ -530,35 +444,20 @@ onMounted(async () => {
                       }}
                     </span>
                   </div>
-                  <div
-                    v-if="j.hora_salida_real"
-                    class="flex justify-between text-xs"
-                  >
-                    <span class="text-slate-400 font-medium"
-                      >Hora real salida</span
-                    >
+                  <div v-if="j.hora_salida_real" class="flex justify-between text-xs">
+                    <span class="text-slate-400 font-medium">Hora real salida</span>
                     <span class="font-bold text-slate-700">{{
                       j.hora_salida_real?.slice(0, 5)
                     }}</span>
                   </div>
-                  <div
-                    v-if="j.observaciones"
-                    class="flex justify-between text-xs gap-4"
-                  >
-                    <span class="text-slate-400 font-medium shrink-0"
-                      >Observaciones</span
-                    >
+                  <div v-if="j.observaciones" class="flex justify-between text-xs gap-4">
+                    <span class="text-slate-400 font-medium shrink-0">Observaciones</span>
                     <span class="font-medium text-slate-600 text-right">{{
                       j.observaciones
                     }}</span>
                   </div>
-                  <div
-                    v-if="j.fecha_incidencia"
-                    class="flex justify-between text-xs"
-                  >
-                    <span class="text-slate-400 font-medium"
-                      >Registrada el</span
-                    >
+                  <div v-if="j.fecha_incidencia" class="flex justify-between text-xs">
+                    <span class="text-slate-400 font-medium">Registrada el</span>
                     <span class="font-medium text-slate-500">
                       {{
                         new Date(j.fecha_incidencia).toLocaleDateString(
@@ -581,18 +480,11 @@ onMounted(async () => {
     </main>
 
     <!-- Modal de cambio de contraseña -->
-    <CambiarPasswordModal
-      v-if="mostrarCambiarPassword"
-      @cerrar="mostrarCambiarPassword = false"
-    />
+    <CambiarPasswordModal v-if="mostrarCambiarPassword" @cerrar="mostrarCambiarPassword = false" />
 
     <!-- Modal de incidencia pendiente — se muestra si hay una jornada sin cerrar -->
-    <IncidenciaModal
-      v-if="incidenciaPendiente"
-      :fichaje-id="incidenciaPendiente.fichaje_id"
-      :fecha-entrada="incidenciaPendiente.fecha_entrada"
-      :hora-entrada="incidenciaPendiente.hora_entrada"
-      @resuelta="incidenciaPendiente = null; fetchEmpleado(); fetchHistorial(empleado.id, periodoActivo)"
-    />
+    <IncidenciaModal v-if="incidenciaPendiente" :fichaje-id="incidenciaPendiente.fichaje_id"
+      :fecha-entrada="incidenciaPendiente.fecha_entrada" :hora-entrada="incidenciaPendiente.hora_entrada"
+      @resuelta="incidenciaPendiente = null; fetchEmpleado(); fetchHistorial(empleado.id, periodoActivo)" />
   </div>
 </template>

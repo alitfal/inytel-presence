@@ -27,6 +27,7 @@ import DashboardView from "../views/DashboardView.vue";
 import InformesView from "../views/InformesView.vue";
 import IncidenciasView from "../views/IncidenciasView.vue";
 import ControlHorarioView from "../views/ControlHorarioView.vue";
+import MiControlHorarioView from "../views/MiControlHorarioView.vue";
 import PerfilView from "../views/PerfilView.vue";
 import ResetPasswordView from "../views/ResetPasswordView.vue";
 
@@ -70,6 +71,12 @@ const routes = [
     path: "/control-horario",
     component: ControlHorarioView,
     meta: { requiereAuth: true, soloAdmin: true },
+  },
+
+  { 
+    path: "/mi-control-horario", 
+    component: MiControlHorarioView, meta: 
+    { requiereAuth: true } 
   },
 
   // Rutas de empleado — requieren autenticación, accesibles para cualquier rol
