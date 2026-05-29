@@ -8,7 +8,7 @@ COPY . .
 
 RUN cd frontend && pnpm install --ignore-scripts && pnpm rebuild esbuild && pnpm run build
 
-RUN cd backend && pnpm install
+RUN cd backend && pnpm install --ignore-scripts
 
 EXPOSE 3001
 
