@@ -65,6 +65,7 @@ app.use("/api/empleados", require("./routes/empleados"));
 app.use("/api/fichajes", require("./routes/fichajes"));
 app.use("/api/dashboard", require("./routes/dashboard"));
 app.use("/api/exportacion", require("./routes/exportacion"));
+app.use("/api/incidencias", require("./routes/incidencias"));
 
 // Redirige cualquier ruta desconocida al frontend (SPA)
 app.get("*", (req, res) => {
